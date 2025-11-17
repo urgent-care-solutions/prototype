@@ -1,39 +1,27 @@
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 from jose import JWTError, jwt
-import redis.asyncio as redis
 import logging
-from tortoise import Tortoise
+import asyncpg
 
 from app.config import settings
-from app.models import RefreshToken
 from app.schemas import TokenResponse, UserInfo, TokenValidationResponse
+from app.services.redis_token_manager import token_manager
 
 logger = logging.getLogger(__name__)
 
 
 class AuthService:
     def __init__(self):
-        self.redis_client: Optional[redis.Redis] = None
+        self.db_pool: Optional[asyncpg.Pool] = None
 
-    async def initialize_redis(self):
-        try:
-            url = f"redis://{settings.REDIS_HOST}:{settings.REDIS_PORT}/0"
-            if settings.REDIS_PASSWORD:
-                url = f"redis://:{settings.REDIS_PASSWORD}@{settings.REDIS_HOST}:{settings.REDIS_PORT}/0"
+    async def initialize(self, db_pool: asyncpg.Pool):
+        self.db_pool = db_pool
+        await token_manager.connect()
+        logger.info("Auth service initialized")
 
-            self.redis_client = await redis.from_url(
-                url, encoding="utf-8", decode_responses=True
-            )
-            await self.redis_client.ping()
-            logger.info("Redis connected")
-        except Exception as e:
-            logger.warning(f"Redis unavailable: {e}. Token blacklist disabled.")
-            self.redis_client = None
-
-    async def close_redis(self):
-        if self.redis_client:
-            await self.redis_client.aclose()
+    async def close(self):
+        await token_manager.close()
 
     def create_access_token(
         self, user_id: str, email: str, role_name: str, org_id: str
@@ -63,48 +51,58 @@ class AuthService:
         )
 
     async def authenticate_user(self, email: str, password: str):
-        conn = Tortoise.get_connection("default")
-
-        user_data = await conn.execute_query_dict(
-            """
-            SELECT u.id, u.email, u.password_hash, u.first_name, u.last_name,
-                   u.is_active, u.failed_login_attempts, u.account_locked_until,
-                   u.organization_id, r.name as role_name, r.permissions
-            FROM users u
-            JOIN roles r ON u.role_id = r.id
-            WHERE u.email = $1
-            """,
-            [email],
-        )
-
-        if not user_data:
-            return None
-
-        user = user_data[0]
-
-        if not user["is_active"]:
-            return None
-
-        if user["account_locked_until"] and user["account_locked_until"] > datetime.now(
-            timezone.utc
-        ):
-            return None
-
-        from passlib.hash import bcrypt
-
-        if not bcrypt.verify(password, user["password_hash"]):
-            await conn.execute_query(
-                "UPDATE users SET failed_login_attempts = failed_login_attempts + 1, account_locked_until = CASE WHEN failed_login_attempts + 1 >= 5 THEN $1 ELSE NULL END WHERE id = $2",
-                [datetime.now(timezone.utc) + timedelta(minutes=30), user["id"]],
+        async with self.db_pool.acquire() as conn:
+            user_data = await conn.fetchrow(
+                """
+                SELECT u.id, u.email, u.password_hash, u.first_name, u.last_name,
+                       u.is_active, u.failed_login_attempts, u.account_locked_until,
+                       u.organization_id, r.name as role_name, r.permissions
+                FROM users u
+                JOIN roles r ON u.role_id = r.id
+                WHERE u.email = $1
+                """,
+                email,
             )
-            return None
 
-        await conn.execute_query(
-            "UPDATE users SET failed_login_attempts = 0, account_locked_until = NULL, last_login = $1 WHERE id = $2",
-            [datetime.now(timezone.utc), user["id"]],
-        )
+            if not user_data:
+                return None
 
-        return user
+            if not user_data["is_active"]:
+                return None
+
+            if user_data["account_locked_until"] and user_data[
+                "account_locked_until"
+            ] > datetime.now(timezone.utc):
+                return None
+
+            from passlib.hash import bcrypt
+
+            if not bcrypt.verify(password, user_data["password_hash"]):
+                await conn.execute(
+                    """UPDATE users 
+                       SET failed_login_attempts = failed_login_attempts + 1,
+                           account_locked_until = CASE 
+                               WHEN failed_login_attempts + 1 >= 5 
+                               THEN $1 
+                               ELSE NULL 
+                           END 
+                       WHERE id = $2""",
+                    datetime.now(timezone.utc) + timedelta(minutes=30),
+                    user_data["id"],
+                )
+                return None
+
+            await conn.execute(
+                """UPDATE users 
+                   SET failed_login_attempts = 0, 
+                       account_locked_until = NULL, 
+                       last_login = $1 
+                   WHERE id = $2""",
+                datetime.now(timezone.utc),
+                user_data["id"],
+            )
+
+            return dict(user_data)
 
     async def login(self, email: str, password: str) -> Optional[TokenResponse]:
         user = await self.authenticate_user(email, password)
@@ -118,14 +116,9 @@ class AuthService:
             user["role_name"],
             str(user["organization_id"]),
         )
-        refresh_token_str = self.create_refresh_token(str(user["id"]))
+        refresh_token = self.create_refresh_token(str(user["id"]))
 
-        await RefreshToken.create(
-            user_id=user["id"],
-            token=refresh_token_str,
-            expires_at=datetime.now(timezone.utc)
-            + timedelta(days=settings.REFRESH_TOKEN_EXPIRY_DAYS),
-        )
+        await token_manager.store_refresh_token(refresh_token, str(user["id"]))
 
         user_info = UserInfo(
             id=str(user["id"]),
@@ -134,22 +127,20 @@ class AuthService:
             last_name=user["last_name"],
             role_name=user["role_name"],
             organization_id=str(user["organization_id"]),
-            permissions=user["permissions"],
+            permissions=user["permissions"] or {},
         )
 
         return TokenResponse(
             access_token=access_token,
-            refresh_token=refresh_token_str,
+            refresh_token=refresh_token,
             expires_in=settings.JWT_EXPIRY_MINUTES * 60,
             user=user_info,
         )
 
     async def validate_token(self, token: str) -> TokenValidationResponse:
         try:
-            if self.redis_client:
-                is_blacklisted = await self.redis_client.get(f"blacklist:{token}")
-                if is_blacklisted:
-                    return TokenValidationResponse(valid=False, message="Token revoked")
+            if await token_manager.is_token_blacklisted(token):
+                return TokenValidationResponse(valid=False, message="Token revoked")
 
             payload = jwt.decode(
                 token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM]
@@ -159,13 +150,13 @@ class AuthService:
             if not user_id:
                 return TokenValidationResponse(valid=False, message="Invalid token")
 
-            conn = Tortoise.get_connection("default")
-            user_data = await conn.execute_query_dict(
-                "SELECT id, email, is_active FROM users WHERE id = $1", [user_id]
-            )
+            async with self.db_pool.acquire() as conn:
+                user_data = await conn.fetchrow(
+                    "SELECT id, email, is_active FROM users WHERE id = $1", user_id
+                )
 
-            if not user_data or not user_data[0]["is_active"]:
-                return TokenValidationResponse(valid=False, message="User inactive")
+                if not user_data or not user_data["is_active"]:
+                    return TokenValidationResponse(valid=False, message="User inactive")
 
             return TokenValidationResponse(
                 valid=True,
@@ -185,18 +176,13 @@ class AuthService:
 
     async def logout(self, token: str) -> bool:
         try:
-            if not self.redis_client:
-                return True
-
             payload = jwt.decode(
                 token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM]
             )
             exp = payload.get("exp")
 
             if exp:
-                ttl = exp - int(datetime.now(timezone.utc).timestamp())
-                if ttl > 0:
-                    await self.redis_client.setex(f"blacklist:{token}", ttl, "1")
+                await token_manager.blacklist_access_token(token, exp)
 
             return True
         except Exception as e:
@@ -214,28 +200,26 @@ class AuthService:
 
             user_id = payload.get("sub")
 
-            token_record = await RefreshToken.get_or_none(
-                token=refresh_token, is_revoked=False
-            )
-            if not token_record or token_record.expires_at < datetime.now(timezone.utc):
+            token_data = await token_manager.get_refresh_token(refresh_token)
+            if not token_data:
                 return None
 
-            conn = Tortoise.get_connection("default")
-            user_data = await conn.execute_query_dict(
-                """
-                SELECT u.id, u.email, u.first_name, u.last_name, u.is_active,
-                       u.organization_id, r.name as role_name, r.permissions
-                FROM users u
-                JOIN roles r ON u.role_id = r.id
-                WHERE u.id = $1
-                """,
-                [user_id],
-            )
+            async with self.db_pool.acquire() as conn:
+                user_data = await conn.fetchrow(
+                    """
+                    SELECT u.id, u.email, u.first_name, u.last_name, u.is_active,
+                           u.organization_id, r.name as role_name, r.permissions
+                    FROM users u
+                    JOIN roles r ON u.role_id = r.id
+                    WHERE u.id = $1
+                    """,
+                    user_id,
+                )
 
-            if not user_data or not user_data[0]["is_active"]:
-                return None
+                if not user_data or not user_data["is_active"]:
+                    return None
 
-            user = user_data[0]
+            user = dict(user_data)
 
             access_token = self.create_access_token(
                 str(user["id"]),
@@ -251,7 +235,7 @@ class AuthService:
                 last_name=user["last_name"],
                 role_name=user["role_name"],
                 organization_id=str(user["organization_id"]),
-                permissions=user["permissions"],
+                permissions=user["permissions"] or {},
             )
 
             return TokenResponse(
@@ -263,6 +247,9 @@ class AuthService:
 
         except JWTError:
             return None
+
+    async def logout_all_sessions(self, user_id: str) -> bool:
+        return await token_manager.revoke_all_user_sessions(user_id)
 
 
 auth_service = AuthService()

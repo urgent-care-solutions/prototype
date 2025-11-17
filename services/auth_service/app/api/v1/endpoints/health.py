@@ -1,10 +1,10 @@
 from fastapi import APIRouter, status
 from datetime import datetime, timezone
-from tortoise import Tortoise
 
 from app.config import settings
 from app.schemas import HealthCheckResponse
-from app.services.auth_service import auth_service
+from app.services.redis_token_manager import token_manager
+from app.db.database import db_pool
 
 router = APIRouter()
 
@@ -15,20 +15,21 @@ router = APIRouter()
 async def health_check():
     db_status = "connected"
     try:
-        conn = Tortoise.get_connection("default")
-        await conn.execute_query("SELECT 1")
+        async with db_pool.acquire() as conn:
+            await conn.fetchval("SELECT 1")
     except Exception:
         db_status = "disconnected"
 
-    redis_status = "connected" if auth_service.redis_client else "disabled"
-    if auth_service.redis_client:
-        try:
-            await auth_service.redis_client.ping()
-        except Exception:
-            redis_status = "disconnected"
+    redis_status = "connected"
+    try:
+        await token_manager.redis_client.ping()
+    except Exception:
+        redis_status = "disconnected"
 
     return HealthCheckResponse(
-        status="healthy" if db_status == "connected" else "degraded",
+        status="healthy"
+        if db_status == "connected" and redis_status == "connected"
+        else "degraded",
         timestamp=datetime.now(timezone.utc),
         version=settings.VERSION,
         database=db_status,

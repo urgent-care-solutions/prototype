@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 import logging
 
 from app.config import settings
-from app.db.database import init_db, close_db
+from app.db.database import init_db, close_db, db_pool
 from app.services.auth_service import auth_service
 from app.api.v1.endpoints import health, auth
 
@@ -20,11 +20,11 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI):
     logger.info("Starting Auth Service...")
     await init_db()
-    await auth_service.initialize_redis()
-    logger.info("Auth Service started")
+    await auth_service.initialize(db_pool)
+    logger.info("Auth Service started successfully")
     yield
     logger.info("Shutting down Auth Service...")
-    await auth_service.close_redis()
+    await auth_service.close()
     await close_db()
     logger.info("Auth Service stopped")
 
@@ -54,6 +54,7 @@ async def root():
         "service": settings.PROJECT_NAME,
         "version": settings.VERSION,
         "status": "running",
+        "storage": "Redis",
     }
 
 
