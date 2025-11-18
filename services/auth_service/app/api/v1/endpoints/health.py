@@ -1,37 +1,27 @@
-from fastapi import APIRouter, status
-from datetime import datetime, timezone
+from datetime import datetime
+
+from fastapi import APIRouter
 
 from app.config import settings
-from app.schemas import HealthCheckResponse
-from app.services.redis_token_manager import token_manager
-from app.db.database import db_pool
+from app.core.redis import redis_client
 
 router = APIRouter()
 
 
-@router.get(
-    "/health", response_model=HealthCheckResponse, status_code=status.HTTP_200_OK
-)
+@router.get("/health")
 async def health_check():
-    db_status = "connected"
-    try:
-        async with db_pool.acquire() as conn:
-            await conn.fetchval("SELECT 1")
-    except Exception:
-        db_status = "disconnected"
-
     redis_status = "connected"
     try:
-        await token_manager.redis_client.ping()
-    except Exception:
-        redis_status = "disconnected"
+        if redis_client.client:
+            redis_client.client.ping()
+        else:
+            redis_status = "not configured"
+    except Exception as e:
+        redis_status = f"error: {str(e)}"
 
-    return HealthCheckResponse(
-        status="healthy"
-        if db_status == "connected" and redis_status == "connected"
-        else "degraded",
-        timestamp=datetime.now(timezone.utc),
-        version=settings.VERSION,
-        database=db_status,
-        redis=redis_status,
-    )
+    return {
+        "status": "healthy",
+        "version": settings.VERSION,
+        "redis": redis_status,
+        "timestamp": datetime.utcnow().isoformat(),
+    }

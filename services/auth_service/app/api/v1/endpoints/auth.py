@@ -1,71 +1,46 @@
-from fastapi import APIRouter, HTTPException, status, Header
 from typing import Optional
 
-from app.schemas import (
+from fastapi import APIRouter, Depends, Header, HTTPException, status
+
+from app.schemas.auth import (
     LoginRequest,
-    TokenResponse,
+    LogoutRequest,
     RefreshTokenRequest,
-    ValidateTokenRequest,
-    TokenValidationResponse,
+    TokenResponse,
+    VerifyTokenRequest,
 )
 from app.services.auth_service import auth_service
 
 router = APIRouter()
 
 
-@router.post(
-    "/auth/login", response_model=TokenResponse, status_code=status.HTTP_200_OK
-)
+@router.post("/login", response_model=TokenResponse)
 async def login(request: LoginRequest):
-    result = await auth_service.login(request.email, request.password)
-
-    if not result:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid credentials or account locked",
-        )
-
-    return result
+    return await auth_service.login(request.email, request.password)
 
 
-@router.post("/auth/logout", status_code=status.HTTP_200_OK)
-async def logout(authorization: Optional[str] = Header(None)):
-    if not authorization or not authorization.startswith("Bearer "):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="No authorization token"
-        )
-
-    token = authorization.split(" ")[1]
-    success = await auth_service.logout(token)
-
-    if not success:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Logout failed"
-        )
-
-    return {"message": "Logged out successfully"}
-
-
-@router.post(
-    "/auth/refresh", response_model=TokenResponse, status_code=status.HTTP_200_OK
-)
+@router.post("/refresh", response_model=TokenResponse)
 async def refresh_token(request: RefreshTokenRequest):
-    result = await auth_service.refresh_access_token(request.refresh_token)
+    return await auth_service.refresh(request.refresh_token)
 
-    if not result:
+
+@router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
+async def logout(request: LogoutRequest, authorization: Optional[str] = Header(None)):
+    access_token = None
+    if authorization and authorization.startswith("Bearer "):
+        access_token = authorization.replace("Bearer ", "")
+
+    if not access_token:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or expired refresh token",
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Access token required in Authorization header",
         )
 
-    return result
+    await auth_service.logout(access_token, request.refresh_token)
+    return None
 
 
-@router.post(
-    "/auth/validate",
-    response_model=TokenValidationResponse,
-    status_code=status.HTTP_200_OK,
-)
-async def validate_token(request: ValidateTokenRequest):
-    result = await auth_service.validate_token(request.token)
-    return result
+@router.post("/verify")
+async def verify_token(request: VerifyTokenRequest):
+    payload = await auth_service.verify(request.token)
+    return {"valid": True, "payload": payload}

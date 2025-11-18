@@ -1,15 +1,14 @@
+import logging
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from contextlib import asynccontextmanager
-import logging
 
+from app.api.v1.endpoints import auth, health
 from app.config import settings
-from app.db.database import init_db, close_db, db_pool
-from app.services.auth_service import auth_service
-from app.api.v1.endpoints import health, auth
+from app.core.redis import redis_client
 
 logging.basicConfig(
-    level=getattr(logging, settings.LOG_LEVEL),
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
 
@@ -19,14 +18,12 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("Starting Auth Service...")
-    await init_db()
-    await auth_service.initialize(db_pool)
+    redis_client.connect()
     logger.info("Auth Service started successfully")
     yield
     logger.info("Shutting down Auth Service...")
-    await auth_service.close()
-    await close_db()
-    logger.info("Auth Service stopped")
+    redis_client.disconnect()
+    logger.info("Auth Service shut down successfully")
 
 
 app = FastAPI(
@@ -45,7 +42,9 @@ app.add_middleware(
 )
 
 app.include_router(health.router, prefix=settings.API_V1_STR, tags=["health"])
-app.include_router(auth.router, prefix=settings.API_V1_STR, tags=["auth"])
+app.include_router(
+    auth.router, prefix=f"{settings.API_V1_STR}/auth", tags=["authentication"]
+)
 
 
 @app.get("/")
@@ -54,7 +53,6 @@ async def root():
         "service": settings.PROJECT_NAME,
         "version": settings.VERSION,
         "status": "running",
-        "storage": "Redis",
     }
 
 
@@ -66,4 +64,5 @@ if __name__ == "__main__":
         host="0.0.0.0",
         port=settings.PORT,
         reload=settings.ENVIRONMENT == "development",
+        reload=settings.ENVIRONMENT == "development"
     )

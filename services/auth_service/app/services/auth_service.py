@@ -1,255 +1,178 @@
-from datetime import datetime, timedelta, timezone
-from typing import Optional
-from jose import JWTError, jwt
 import logging
-import asyncpg
+from datetime import datetime, timedelta
+from typing import Optional, Tuple
+
+from fastapi import HTTPException, status
 
 from app.config import settings
-from app.schemas import TokenResponse, UserInfo, TokenValidationResponse
-from app.services.redis_token_manager import token_manager
+from app.core.redis import redis_client
+from app.core.security import (
+    create_access_token,
+    create_refresh_token,
+    decode_token,
+    verify_token,
+)
+from app.services.clinic_config_client import clinic_config_client
 
 logger = logging.getLogger(__name__)
 
 
 class AuthService:
-    def __init__(self):
-        self.db_pool: Optional[asyncpg.Pool] = None
-
-    async def initialize(self, db_pool: asyncpg.Pool):
-        self.db_pool = db_pool
-        await token_manager.connect()
-        logger.info("Auth service initialized")
-
-    async def close(self):
-        await token_manager.close()
-
-    def create_access_token(
-        self, user_id: str, email: str, role_name: str, org_id: str
-    ) -> str:
-        expire = datetime.now(timezone.utc) + timedelta(
-            minutes=settings.JWT_EXPIRY_MINUTES
-        )
-        to_encode = {
-            "sub": user_id,
-            "email": email,
-            "role": role_name,
-            "org_id": org_id,
-            "exp": expire,
-            "type": "access",
-        }
-        return jwt.encode(
-            to_encode, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM
-        )
-
-    def create_refresh_token(self, user_id: str) -> str:
-        expire = datetime.now(timezone.utc) + timedelta(
-            days=settings.REFRESH_TOKEN_EXPIRY_DAYS
-        )
-        to_encode = {"sub": user_id, "exp": expire, "type": "refresh"}
-        return jwt.encode(
-            to_encode, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM
-        )
-
-    async def authenticate_user(self, email: str, password: str):
-        async with self.db_pool.acquire() as conn:
-            user_data = await conn.fetchrow(
-                """
-                SELECT u.id, u.email, u.password_hash, u.first_name, u.last_name,
-                       u.is_active, u.failed_login_attempts, u.account_locked_until,
-                       u.organization_id, r.name as role_name, r.permissions
-                FROM users u
-                JOIN roles r ON u.role_id = r.id
-                WHERE u.email = $1
-                """,
-                email,
-            )
-
-            if not user_data:
-                return None
-
-            if not user_data["is_active"]:
-                return None
-
-            if user_data["account_locked_until"] and user_data[
-                "account_locked_until"
-            ] > datetime.now(timezone.utc):
-                return None
-
-            from passlib.hash import bcrypt
-
-            if not bcrypt.verify(password, user_data["password_hash"]):
-                await conn.execute(
-                    """UPDATE users 
-                       SET failed_login_attempts = failed_login_attempts + 1,
-                           account_locked_until = CASE 
-                               WHEN failed_login_attempts + 1 >= 5 
-                               THEN $1 
-                               ELSE NULL 
-                           END 
-                       WHERE id = $2""",
-                    datetime.now(timezone.utc) + timedelta(minutes=30),
-                    user_data["id"],
-                )
-                return None
-
-            await conn.execute(
-                """UPDATE users 
-                   SET failed_login_attempts = 0, 
-                       account_locked_until = NULL, 
-                       last_login = $1 
-                   WHERE id = $2""",
-                datetime.now(timezone.utc),
-                user_data["id"],
-            )
-
-            return dict(user_data)
-
-    async def login(self, email: str, password: str) -> Optional[TokenResponse]:
-        user = await self.authenticate_user(email, password)
+    @staticmethod
+    async def login(email: str, password: str) -> TokenResponse:
+        user = await clinic_config_client.verify_user_credentials(email, password)
 
         if not user:
-            return None
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid email or password",
+            )
 
-        access_token = self.create_access_token(
-            str(user["id"]),
-            user["email"],
-            user["role_name"],
-            str(user["organization_id"]),
-        )
-        refresh_token = self.create_refresh_token(str(user["id"]))
+        if not user.is_active:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN, detail="Account is deactivated"
+            )
 
-        await token_manager.store_refresh_token(refresh_token, str(user["id"]))
+        token_data = {
+            "sub": str(user.id),
+            "user_id": str(user.id),
+            "organization_id": str(user.organization_id),
+            "role_id": str(user.role_id),
+            "email": user.email,
+        }
 
-        user_info = UserInfo(
-            id=str(user["id"]),
-            email=user["email"],
-            first_name=user["first_name"],
-            last_name=user["last_name"],
-            role_name=user["role_name"],
-            organization_id=str(user["organization_id"]),
-            permissions=user["permissions"] or {},
-        )
+        access_token = create_access_token(token_data)
+        refresh_token = create_refresh_token(token_data)
+
+        refresh_payload = decode_token(refresh_token)
+        if refresh_payload and "jti" in refresh_payload:
+            ttl = settings.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60
+            redis_client.set_refresh_token(refresh_payload["jti"], str(user.id), ttl)
 
         return TokenResponse(
             access_token=access_token,
             refresh_token=refresh_token,
-            expires_in=settings.JWT_EXPIRY_MINUTES * 60,
-            user=user_info,
+            token_type="bearer",
+            expires_in=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+            user_id=str(user.id),
+            organization_id=str(user.organization_id),
         )
 
-    async def validate_token(self, token: str) -> TokenValidationResponse:
-        try:
-            if await token_manager.is_token_blacklisted(token):
-                return TokenValidationResponse(valid=False, message="Token revoked")
+    @staticmethod
+    async def refresh(refresh_token: str) -> TokenResponse:
+        payload = verify_token(refresh_token)
 
-            payload = jwt.decode(
-                token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM]
+        if not payload:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token"
             )
 
-            user_id = payload.get("sub")
-            if not user_id:
-                return TokenValidationResponse(valid=False, message="Invalid token")
+        if payload.get("type") != "refresh":
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Token is not a refresh token",
+            )
 
-            async with self.db_pool.acquire() as conn:
-                user_data = await conn.fetchrow(
-                    "SELECT id, email, is_active FROM users WHERE id = $1", user_id
+        if redis_client.is_token_blacklisted(refresh_token):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Token has been revoked",
+            )
+
+        jti = payload.get("jti")
+        if jti:
+            stored_user_id = redis_client.get_refresh_token(jti)
+            if not stored_user_id or stored_user_id != payload.get("user_id"):
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Invalid refresh token",
                 )
 
-                if not user_data or not user_data["is_active"]:
-                    return TokenValidationResponse(valid=False, message="User inactive")
+        user_id = payload.get("user_id")
+        user = await clinic_config_client.get_user_by_id(user_id)
 
-            return TokenValidationResponse(
-                valid=True,
-                user_id=user_id,
-                email=payload.get("email"),
-                role_name=payload.get("role"),
-                organization_id=payload.get("org_id"),
-                permissions={},
+        if not user or not user.is_active:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="User not found or deactivated",
             )
 
-        except JWTError as e:
-            logger.error(f"JWT error: {e}")
-            return TokenValidationResponse(valid=False, message="Invalid token")
-        except Exception as e:
-            logger.error(f"Validation error: {e}")
-            return TokenValidationResponse(valid=False, message="Validation failed")
+        token_data = {
+            "sub": str(user.id),
+            "user_id": str(user.id),
+            "organization_id": str(user.organization_id),
+            "role_id": str(user.role_id),
+            "email": user.email,
+        }
 
-    async def logout(self, token: str) -> bool:
-        try:
-            payload = jwt.decode(
-                token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM]
-            )
-            exp = payload.get("exp")
+        access_token = create_access_token(token_data)
+        new_refresh_token = create_refresh_token(token_data)
 
+        if jti:
+            redis_client.delete_refresh_token(jti)
+
+        new_payload = decode_token(new_refresh_token)
+        if new_payload and "jti" in new_payload:
+            ttl = settings.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60
+            redis_client.set_refresh_token(new_payload["jti"], str(user.id), ttl)
+
+        return TokenResponse(
+            access_token=access_token,
+            refresh_token=new_refresh_token,
+            token_type="bearer",
+            expires_in=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+            user_id=str(user.id),
+            organization_id=str(user.organization_id),
+        )
+
+    @staticmethod
+    async def logout(access_token: str, refresh_token: Optional[str] = None):
+        access_payload = decode_token(access_token)
+        if access_payload:
+            exp = access_payload.get("exp")
             if exp:
-                await token_manager.blacklist_access_token(token, exp)
+                exp_datetime = datetime.fromtimestamp(exp)
+                ttl = int((exp_datetime - datetime.utcnow()).total_seconds())
+                if ttl > 0:
+                    redis_client.blacklist_token(access_token, ttl)
 
-            return True
-        except Exception as e:
-            logger.error(f"Logout error: {e}")
-            return False
+        if refresh_token:
+            refresh_payload = decode_token(refresh_token)
+            if refresh_payload:
+                jti = refresh_payload.get("jti")
+                if jti:
+                    redis_client.delete_refresh_token(jti)
 
-    async def refresh_access_token(self, refresh_token: str) -> Optional[TokenResponse]:
-        try:
-            payload = jwt.decode(
-                refresh_token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM]
+                exp = refresh_payload.get("exp")
+                if exp:
+                    exp_datetime = datetime.fromtimestamp(exp)
+                    ttl = int((exp_datetime - datetime.utcnow()).total_seconds())
+                    if ttl > 0:
+                        redis_client.blacklist_token(refresh_token, ttl)
+
+    @staticmethod
+    async def verify(token: str) -> dict:
+        if redis_client.is_token_blacklisted(token):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Token has been revoked",
             )
 
-            if payload.get("type") != "refresh":
-                return None
+        payload = verify_token(token)
 
-            user_id = payload.get("sub")
-
-            token_data = await token_manager.get_refresh_token(refresh_token)
-            if not token_data:
-                return None
-
-            async with self.db_pool.acquire() as conn:
-                user_data = await conn.fetchrow(
-                    """
-                    SELECT u.id, u.email, u.first_name, u.last_name, u.is_active,
-                           u.organization_id, r.name as role_name, r.permissions
-                    FROM users u
-                    JOIN roles r ON u.role_id = r.id
-                    WHERE u.id = $1
-                    """,
-                    user_id,
-                )
-
-                if not user_data or not user_data["is_active"]:
-                    return None
-
-            user = dict(user_data)
-
-            access_token = self.create_access_token(
-                str(user["id"]),
-                user["email"],
-                user["role_name"],
-                str(user["organization_id"]),
+        if not payload:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token"
             )
 
-            user_info = UserInfo(
-                id=str(user["id"]),
-                email=user["email"],
-                first_name=user["first_name"],
-                last_name=user["last_name"],
-                role_name=user["role_name"],
-                organization_id=str(user["organization_id"]),
-                permissions=user["permissions"] or {},
+        return payload
+
+        if not payload:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token"
             )
 
-            return TokenResponse(
-                access_token=access_token,
-                refresh_token=refresh_token,
-                expires_in=settings.JWT_EXPIRY_MINUTES * 60,
-                user=user_info,
-            )
-
-        except JWTError:
-            return None
-
-    async def logout_all_sessions(self, user_id: str) -> bool:
-        return await token_manager.revoke_all_user_sessions(user_id)
+        return payload
 
 
 auth_service = AuthService()
