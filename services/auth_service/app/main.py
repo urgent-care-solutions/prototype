@@ -64,5 +64,4 @@ if __name__ == "__main__":
         host="0.0.0.0",
         port=settings.PORT,
         reload=settings.ENVIRONMENT == "development",
-        reload=settings.ENVIRONMENT == "development"
     )

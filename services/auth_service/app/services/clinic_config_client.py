@@ -19,24 +19,17 @@ class ClinicConfigClient:
     ) -> Optional[UserResponse]:
         async with httpx.AsyncClient(timeout=self.timeout) as client:
             try:
-                response = await client.get(
-                    f"{self.base_url}/users", params={"email": email, "is_active": True}
-                )
+                response = await client.get(f"{self.base_url}/users/by-email/{email}")
 
                 if response.status_code != 200:
                     logger.error(f"Failed to fetch user: {response.status_code}")
                     return None
 
-                users = response.json()
-                if not users or len(users) == 0:
-                    logger.info(f"User not found: {email}")
-                    return None
-
-                user_data = users[0]
+                user_data = response.json()
                 user = UserResponse(**user_data)
 
                 verify_response = await client.post(
-                    f"{self.base_url}/auth/verify-password",
+                    f"{self.base_url}/users/verify-password",
                     json={"email": email, "password": password},
                 )
 
@@ -50,13 +43,13 @@ class ClinicConfigClient:
                 logger.error(f"Request error to Clinic Config Service: {e}")
                 return None
             except Exception as e:
-                logger.error(f"Error verifying user credentials: {e}")
+                logger.error(f"Error occured while verifying user credentials: {e}")
                 return None
 
     async def get_user_by_id(self, user_id: str) -> Optional[UserResponse]:
         async with httpx.AsyncClient(timeout=self.timeout) as client:
             try:
-                response = await client.get(f"{self.base_url}/users/{user_id}")
+                response = await client.get(f"{self.base_url}/users/by-id/{user_id}")
 
                 if response.status_code != 200:
                     return None
@@ -81,9 +74,6 @@ class ClinicConfigClient:
                 return UserPermissions(**response.json())
 
             except Exception as e:
-                logger.error(f"Error fetching user permissions: {e}")
-                return None
-
                 logger.error(f"Error fetching user permissions: {e}")
                 return None
 

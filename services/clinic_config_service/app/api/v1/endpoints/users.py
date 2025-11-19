@@ -1,8 +1,10 @@
-from fastapi import APIRouter, Query, Path, HTTPException, status
 from typing import List, Optional
 from uuid import UUID
 
-from app.schemas import UserCreate, UserUpdate, UserResponse
+from fastapi import APIRouter, HTTPException, Query, status
+from pydantic import EmailStr
+
+from app.schemas import UserCreate, UserResponse, UserUpdate, UserVerification
 from app.services.user_service import UserService
 
 router = APIRouter()
@@ -13,9 +15,14 @@ async def create_user(user: UserCreate):
     return await UserService.create_user(user)
 
 
-@router.get("/users/{user_id}", response_model=UserResponse)
-async def get_user(user_id: UUID = Path(...)):
+@router.get("/users/by-id/{user_id}", response_model=UserResponse)
+async def get_user_by_id(user_id: UUID):
     return await UserService.get_user(user_id)
+
+
+@router.get("/users/by-email/{email}", response_model=UserResponse)
+async def get_user_by_email(email: str):
+    return await UserService.get_user_by_email(email)
 
 
 @router.get("/users", response_model=List[UserResponse])
@@ -50,3 +57,14 @@ async def delete_user(user_id: UUID):
 async def get_user_permissions(user_id: UUID):
     permissions = await UserService.get_user_permissions(user_id)
     return {"user_id": str(user_id), "permissions": permissions}
+
+
+@router.post("/users/verify-password")
+async def verify_user_pass(user_creds: UserVerification):
+    user = await UserService.verify_user_password(user_creds.email, user_creds.password)
+    if user is not None:
+        return UserResponse.model_validate(user)
+
+    raise HTTPException(
+        status_code=404, detail="user with specified credentials not found"
+    )

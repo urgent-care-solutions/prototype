@@ -1,7 +1,8 @@
-from pydantic import BaseModel, EmailStr, Field, field_validator
-from typing import Optional, Dict, Any, List
 from datetime import datetime
+from typing import Any, Dict, Optional
 from uuid import UUID
+
+from pydantic import BaseModel, EmailStr, Field, field_validator
 
 
 class OrganizationBase(BaseModel):
@@ -224,3 +225,8 @@ class HealthCheckResponse(BaseModel):
     database: str
     redis: Optional[str] = None
     timestamp: datetime
+
+
+class UserVerification(BaseModel):
+    email: EmailStr
+    password: str

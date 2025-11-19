@@ -1,4 +1,5 @@
 from unittest.mock import AsyncMock, patch
+from uuid import UUID
 
 import pytest
 from httpx import AsyncClient
@@ -11,7 +12,8 @@ async def test_login_success(client: AsyncClient, mock_user_response):
     with patch(
         "app.services.clinic_config_client.clinic_config_client.verify_user_credentials"
     ) as mock_verify:
-        mock_verify.return_value = UserResponse(**mock_user_response)
+        user = UserResponse(**mock_user_response)
+        mock_verify.return_value = user
 
         response = await client.post(
             "/api/v1/auth/login",
@@ -56,9 +58,10 @@ async def test_refresh_token(client: AsyncClient, mock_user_response):
         patch("app.core.redis.redis_client.delete_refresh_token") as mock_redis_del,
         patch("app.core.redis.redis_client.is_token_blacklisted") as mock_blacklist,
     ):
-        mock_verify.return_value = UserResponse(**mock_user_response)
-        mock_get_user.return_value = UserResponse(**mock_user_response)
-        mock_redis_get.return_value = mock_user_response["id"]
+        user = UserResponse(**mock_user_response)
+        mock_verify.return_value = user
+        mock_get_user.return_value = user
+        mock_redis_get.return_value = str(mock_user_response["id"])
         mock_blacklist.return_value = False
 
         login_response = await client.post(
@@ -86,8 +89,10 @@ async def test_logout(client: AsyncClient, mock_user_response):
         ) as mock_verify,
         patch("app.core.redis.redis_client.blacklist_token") as mock_blacklist,
         patch("app.core.redis.redis_client.delete_refresh_token") as mock_delete,
+        patch("app.core.redis.redis_client.set_refresh_token") as mock_set,
     ):
-        mock_verify.return_value = UserResponse(**mock_user_response)
+        user = UserResponse(**mock_user_response)
+        mock_verify.return_value = user
 
         login_response = await client.post(
             "/api/v1/auth/login",
@@ -106,6 +111,36 @@ async def test_logout(client: AsyncClient, mock_user_response):
 
 
 @pytest.mark.asyncio
+async def test_verify_token(client: AsyncClient, mock_user_response):
+    with (
+        patch(
+            "app.services.clinic_config_client.clinic_config_client.verify_user_credentials"
+        ) as mock_verify,
+        patch("app.core.redis.redis_client.is_token_blacklisted") as mock_blacklist,
+        patch("app.core.redis.redis_client.set_refresh_token") as mock_set,
+    ):
+        user = UserResponse(**mock_user_response)
+        mock_verify.return_value = user
+        mock_blacklist.return_value = False
+
+        login_response = await client.post(
+            "/api/v1/auth/login",
+            json={"email": "test@example.com", "password": "Test@Password123"},
+        )
+
+        access_token = login_response.json()["access_token"]
+
+        verify_response = await client.post(
+            "/api/v1/auth/verify", json={"token": access_token}
+        )
+
+        assert verify_response.status_code == 200
+        data = verify_response.json()
+        assert data["valid"] is True
+        assert "payload" in data
+
+
+@pytest.mark.asyncio
 async def test_health_check(client: AsyncClient):
     response = await client.get("/api/v1/health")
     assert response.status_code == 200
@@ -113,10 +148,6 @@ async def test_health_check(client: AsyncClient):
     assert "status" in data
     assert data["status"] == "healthy"
 
-    data = response.json()
-    assert "status" in data
-
-    assert data["status"] == "healthy"
 
 @pytest.mark.asyncio
 async def test_root_endpoint(client: AsyncClient):

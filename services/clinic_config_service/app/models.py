@@ -1,8 +1,8 @@
-from tortoise import fields, models
-from tortoise.contrib.pydantic import pydantic_model_creator
-from passlib.hash import bcrypt
 from datetime import datetime
 from typing import Optional
+
+from passlib.hash import bcrypt
+from tortoise import fields, models
 
 
 class Organization(models.Model):

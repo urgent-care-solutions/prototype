@@ -2,19 +2,22 @@ from datetime import datetime
 from typing import Any, Dict, Optional
 from uuid import UUID
 
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 
 
-class UserResponse(BaseModel):
+class UserBase(BaseModel):
+    email: EmailStr
+    first_name: str = Field(..., max_length=100)
+    last_name: str = Field(..., max_length=100)
+    is_provider: bool = False
+    provider_npi: Optional[str] = Field(None, max_length=10)
+    phone: Optional[str] = None
+
+
+class UserResponse(UserBase):
     id: UUID
     organization_id: UUID
     role_id: UUID
-    email: EmailStr
-    first_name: str
-    last_name: str
-    is_provider: bool
-    provider_npi: Optional[str] = None
-    phone: Optional[str] = None
     is_active: bool
     last_login: Optional[datetime] = None
     created_at: datetime

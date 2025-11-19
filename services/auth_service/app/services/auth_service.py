@@ -1,4 +1,3 @@
-import logging
 from datetime import datetime, timedelta
 from typing import Optional, Tuple
 
@@ -14,15 +13,13 @@ from app.core.security import (
 )
 from app.services.clinic_config_client import clinic_config_client
 
-logger = logging.getLogger(__name__)
-
 
 class AuthService:
     @staticmethod
-    async def login(email: str, password: str) -> TokenResponse:
+    async def login(email: str, password: str) -> dict:
         user = await clinic_config_client.verify_user_credentials(email, password)
 
-        if not user:
+        if user is None:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid email or password",
@@ -49,7 +46,7 @@ class AuthService:
             ttl = settings.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60
             redis_client.set_refresh_token(refresh_payload["jti"], str(user.id), ttl)
 
-        return TokenResponse(
+        return dict(
             access_token=access_token,
             refresh_token=refresh_token,
             token_type="bearer",
@@ -59,7 +56,7 @@ class AuthService:
         )
 
     @staticmethod
-    async def refresh(refresh_token: str) -> TokenResponse:
+    async def refresh(refresh_token: str) -> dict:
         payload = verify_token(refresh_token)
 
         if not payload:
@@ -116,7 +113,7 @@ class AuthService:
             ttl = settings.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60
             redis_client.set_refresh_token(new_payload["jti"], str(user.id), ttl)
 
-        return TokenResponse(
+        return dict(
             access_token=access_token,
             refresh_token=new_refresh_token,
             token_type="bearer",
@@ -159,13 +156,6 @@ class AuthService:
             )
 
         payload = verify_token(token)
-
-        if not payload:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token"
-            )
-
-        return payload
 
         if not payload:
             raise HTTPException(
