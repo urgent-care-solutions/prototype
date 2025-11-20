@@ -1,5 +1,6 @@
 import uuid
 from datetime import UTC, datetime
+from typing import Literal
 
 from pydantic import UUID4, BaseModel, EmailStr, Field
 
@@ -44,6 +45,10 @@ class UserUpdate(UserBase):
     pass
 
 
+class UserUpdated(UserBase):
+    success: bool = True
+
+
 class UserDelete(UserBase):
     pass
 
@@ -64,9 +69,25 @@ class ClinicDelete(ClinicBase):
     pass
 
 
+class DepartmentBase(BaseMessage):
+    pass
+
+
+class DepartmentCreate(DepartmentBase):
+    pass
+
+
+class DepartmentUpdate(DepartmentBase):
+    pass
+
+
+class DepartmentDelete(DepartmentBase):
+    pass
+
+
 class AuditLog(BaseMessage):
-    action: str = Field(..., description="CREATE|READ|UPDATE|DELETE")
-    resource_type: str = Field(..., description="patient|appointment|etc")
+    action: Literal["CREATE", "READ", "UPDATE", "DELETE"] = Field(...)
+    resource_type: Literal["patient", "user", "appointment"] = Field(...)
     resource_id: UUID4 | None = None
     service_name: str
     metadata: dict[str, any] | None = None
