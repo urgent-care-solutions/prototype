@@ -9,6 +9,7 @@ from src.models import User
 _log = logging.getLogger("rich")
 
 
+# todo: finish implementation
 class UserService:
     @staticmethod
     async def get_user_by_id(id: uuid4) -> User:

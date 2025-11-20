@@ -4,6 +4,7 @@ from shared.messages import RoleCreate, RoleUpdate
 from src.models import Role
 
 
+# todo: finish implementation
 class RoleService:
     @staticmethod
     async def create_role(role_data: RoleCreate) -> Role:

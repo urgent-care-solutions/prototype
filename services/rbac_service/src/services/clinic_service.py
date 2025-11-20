@@ -4,6 +4,7 @@ from shared.messages import ClinicCreate, ClinicUpdate
 from src.models import Clinic
 
 
+# todo: finish implementation
 class ClinicService:
     @staticmethod
     async def get_clinic(clinic_id: uuid4) -> Clinic:

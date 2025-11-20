@@ -67,3 +67,6 @@ async def handle_user_update(msg: UserUpdate) -> UserUpdated:
     else:
         _log.info(f"Updated user: {msg.user_id}")
         return UserUpdated(success=True)
+
+
+# todo: implement all remaining handlers

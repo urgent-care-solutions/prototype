@@ -7,6 +7,7 @@ from src.models import Department
 _log = logging.getLogger("rich")
 
 
+# todo: finish implementation
 class DepartmentService:
     @staticmethod
     async def get_department(dep_id: uuid4) -> Department:
