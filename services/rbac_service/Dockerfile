@@ -11,9 +11,6 @@ RUN uv sync --no-dev && \
 
 USER app
 
-EXPOSE 8001
+EXPOSE 50051
 
-HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
-    CMD [ "uv", "run", "healthz.py" ]
-
-CMD [ "uv", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8001" ]
+CMD [ "uv", "run", "main.py" ]

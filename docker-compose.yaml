@@ -1,11 +1,75 @@
 services:
+  gateway:
+    build: ./gateway
+    container_name: api-gateway
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8000/healthz" ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+    ports:
+      - 8000:8000
+    networks:
+      - phi
+    depends_on:
+      - rbac
+      - auth
+      - audit
+
   rbac:
     build: ./services/rbac_service
     container_name: rbac-service
-    ports:
-      - 8007:8007
     networks:
       - phi
+    depends_on:
+      - nats
+
+  auth:
+    build: ./services/auth_service
+    container_name: auth-service
+    networks:
+      - phi
+    depends_on:
+      - rbac
+      - nats
+
+  audit:
+    build: ./services/audit_service
+    container_name: audit-service
+    networks:
+      - phi
+    depends_on:
+      - rbac
+      - auth
+      - nats
+
+  nats:
+    image: nats:2.12.2-alpine
+    container_name: nats
+    command:
+      - --jetstream
+      - --store-dir=/data
+      - --max_memory_store=1G
+      - --max_file_store=10G
+    volumes:
+      - nats_data:/data
+    healthcheck:
+      test: [ "CMD", "wget", "--spider", "http://localhost:8222/healthz" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    ports:
+      - 4222:4222
+      - 6222:6222
+      - 8222:8222
+    networks:
+      - phi
+
+volumes:
+  nats_data:
+
 
 networks:
   phi:
