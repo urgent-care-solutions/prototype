@@ -37,7 +37,7 @@ class UserCreate(UserBase):
 
 
 class UserCreated(UserBase):
-    success: bool
+    success: bool = True
 
 
 class UserUpdate(UserBase):
@@ -62,3 +62,12 @@ class ClinicUpdate(ClinicBase):
 
 class ClinicDelete(ClinicBase):
     pass
+
+
+class AuditLog(BaseMessage):
+    action: str = Field(..., description="CREATE|READ|UPDATE|DELETE")
+    resource_type: str = Field(..., description="patient|appointment|etc")
+    resource_id: UUID4 | None = None
+    service_name: str
+    metadata: dict[str, any] | None = None
+    success: bool = True
