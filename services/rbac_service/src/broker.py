@@ -56,10 +56,7 @@ async def handle_user_update(msg: UserUpdate) -> UserUpdated:
                 resource_id=user.id,
                 service_name="rbac-service",
                 metadata={
-                    "email": user.email,
-                    "first_name": user.first_name,
-                    "last_name": user.last_name,
-                    "role_id": user.role_id,
+                    "updated_fields": 0,  # todo: implement
                 },
             ),
             subject="audit.log.user",
