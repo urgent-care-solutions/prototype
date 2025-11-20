@@ -1,0 +1,12 @@
+services:
+  rbac:
+    build: ./services/rbac_service
+    container_name: rbac-service
+    ports:
+      - 8007:8007
+    networks:
+      - phi
+
+networks:
+  phi:
+    driver: bridge
