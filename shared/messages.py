@@ -63,6 +63,22 @@ class UserReaded(UserBase):
     success: bool = True
 
 
+class UserPasswordVerify(UserBase):
+    password: SecretStr
+
+
+class UserPasswordVerified(UserPasswordVerify):
+    success: bool = True
+
+
+class UserList(UserBase):
+    is_active: bool | None = None
+
+
+class UserListed(UserList):
+    success: bool = True
+
+
 class UserCreate(UserBase):
     password: SecretStr
 

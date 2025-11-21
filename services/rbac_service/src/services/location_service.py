@@ -2,9 +2,11 @@ import logging
 from uuid import uuid4
 
 from shared.messages import DepartmentCreate, DepartmentUpdate
+
+from src.config import settings
 from src.models import Department
 
-_log = logging.getLogger("rich")
+_log = logging.getLogger(settings.LOGGER)
 
 
 # todo: finish implementation
@@ -25,7 +27,9 @@ class LocationService:
         raise NotImplementedError
 
     @staticmethod
-    async def update_location(dep_id: uuid4, dep_data: DepartmentUpdate) -> Department:
+    async def update_location(
+        dep_id: uuid4, dep_data: DepartmentUpdate
+    ) -> Department:
         _log.debug(f"Attempting to update location {dep_id}")
         raise NotImplementedError
 

@@ -6,10 +6,11 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from shared.messages import UserCreate, UserUpdate
+from src.config import settings
 from src.database import AsyncSessionLocal
 from src.models import User
 
-_log = logging.getLogger("rich")
+_log = logging.getLogger(settings.LOGGER)
 
 
 class UserService:
@@ -41,7 +42,9 @@ class UserService:
             db_user = User(
                 role_id=user.role_id,
                 email=user.email,
-                password_hash=User.hash_password(user.password.get_secret_value()),
+                password_hash=User.hash_password(
+                    user.password.get_secret_value()
+                ),
                 first_name=getattr(user, "first_name", ""),
                 last_name=getattr(user, "last_name", ""),
             )
@@ -58,15 +61,24 @@ class UserService:
             raise ValueError(f"User {user_data.user_id} not found")
 
         async with AsyncSessionLocal() as session:
-            query = select(User).where(User.id == str(user_data.user_id))
+            query = select(User).where(
+                User.id == str(user_data.user_id)
+            )
             result = await session.execute(query)
             db_user = result.scalars().first()
 
             if not db_user:
                 raise ValueError(f"User {user_data.user_id} not found")
 
-            for field, value in user_data.model_dump(exclude_unset=True).items():
-                if field not in ["user_id", "message_id", "timestamp", "request_id"]:
+            for field, value in user_data.model_dump(
+                exclude_unset=True
+            ).items():
+                if field not in [
+                    "user_id",
+                    "message_id",
+                    "timestamp",
+                    "request_id",
+                ]:
                     setattr(db_user, field, value)
 
             await session.commit()
@@ -89,7 +101,9 @@ class UserService:
             return user
 
     @staticmethod
-    async def list_users(role_id: UUID | None = None, *, is_active: bool | None = None) -> list[User]:
+    async def list_users(
+        role_id: UUID | None = None, *, is_active: bool | None = None
+    ) -> list[User]:
         _log.debug("Attempting to list all users")
         async with AsyncSessionLocal() as session:
             query = select(User)
@@ -104,7 +118,9 @@ class UserService:
             return result.scalars().all()
 
     @staticmethod
-    async def verify_user_password(email: EmailStr, password: SecretStr) -> User | None:
+    async def verify_user_password(
+        email: EmailStr, password: SecretStr
+    ) -> User | None:
         _log.debug(f"Verifying user {email} password")
         user = await UserService.get_user_by_email(email)
         if user and user.verify_password(password.get_secret_value()):

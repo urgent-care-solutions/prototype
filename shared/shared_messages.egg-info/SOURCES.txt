@@ -1,0 +1,8 @@
+README.md
+messages.py
+pyproject.toml
+shared_messages.egg-info/PKG-INFO
+shared_messages.egg-info/SOURCES.txt
+shared_messages.egg-info/dependency_links.txt
+shared_messages.egg-info/requires.txt
+shared_messages.egg-info/top_level.txt

@@ -1,9 +1,7 @@
 [project]
-name = "shared"
-version = "0.1.0"
+name = "shared-messages"
+version = "0.1.2"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.14"
-dependencies = [
-    "pydantic>=2.12.4",
-]
+dependencies = ["pydantic>=2.12.4"]

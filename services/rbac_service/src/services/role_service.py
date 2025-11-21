@@ -1,14 +1,15 @@
 import logging
 from uuid import UUID
 
+from shared.messages import RoleCreate, RoleUpdate
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from shared.messages import RoleCreate, RoleUpdate
+from src.config import settings
 from src.database import AsyncSessionLocal
 from src.models import Role
 
-_log = logging.getLogger("rich")
+_log = logging.getLogger(settings.LOGGER)
 
 
 class RoleService:
@@ -40,7 +41,9 @@ class RoleService:
             return result.scalars().first()
 
     @staticmethod
-    async def list_roles(*, is_active: bool | None = None) -> list[Role]:
+    async def list_roles(
+        *, is_active: bool | None = None
+    ) -> list[Role]:
         _log.debug("Attempting to list all roles")
         if is_active is not None:
             _log.debug("Filtering roles by active status")
@@ -71,8 +74,15 @@ class RoleService:
             if not db_role:
                 raise ValueError(f"Role {role_id} not found")
 
-            for field, value in role_data.model_dump(exclude_unset=True).items():
-                if field not in ["id", "message_id", "timestamp", "request_id"]:
+            for field, value in role_data.model_dump(
+                exclude_unset=True
+            ).items():
+                if field not in [
+                    "id",
+                    "message_id",
+                    "timestamp",
+                    "request_id",
+                ]:
                     setattr(db_role, field, value)
 
             session.add(db_role)
@@ -166,7 +176,9 @@ class RoleService:
         async with AsyncSessionLocal() as session:
             roles = []
             for role_data in default_roles:
-                query = select(Role).where(Role.name == role_data["name"])
+                query = select(Role).where(
+                    Role.name == role_data["name"]
+                )
                 result = await session.execute(query)
                 existing_role = result.scalars().first()
                 if not existing_role:

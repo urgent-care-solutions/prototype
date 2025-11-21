@@ -6,15 +6,21 @@ from shared.messages import (
     UserCreated,
     UserDelete,
     UserDeleted,
+    UserList,
+    UserListed,
+    UserPasswordVerified,
+    UserPasswordVerify,
     UserRead,
     UserReaded,
     UserUpdate,
     UserUpdated,
 )
-from src import broker
+
+from src.broker import broker
+from src.config import settings
 from src.services.user_service import UserService
 
-_log = logging.getLogger("rich")
+_log = logging.getLogger(settings.LOGGER)
 
 
 @broker.subscriber("user.create")
@@ -29,7 +35,7 @@ async def handle_user_create(msg: UserCreate) -> UserCreated:
                 action="CREATE",
                 resource_type="user",
                 resource_id=user.id,
-                service_name="rbac-service",
+                service_name=settings.SERVICE_NAME,
                 metadata={
                     "email": user.email,
                     "first_name": user.first_name,
@@ -59,7 +65,7 @@ async def handle_user_update(msg: UserUpdate) -> UserUpdated:
                 action="UPDATE",
                 resource_type="user",
                 resource_id=user.id,
-                service_name="rbac-service",
+                service_name=settings.SERVICE_NAME,
                 metadata={
                     "updated_fields": 0,  # todo: implement
                 },
@@ -74,7 +80,6 @@ async def handle_user_update(msg: UserUpdate) -> UserUpdated:
         return UserUpdated(success=True)
 
 
-# todo: implement all remaining handlers
 @broker.subscriber("user.read")
 @broker.publisher("user.readed")
 @broker.publisher("audit.log.user")
@@ -91,7 +96,7 @@ async def handle_user_get(msg: UserRead) -> UserReaded:
                 action="READ",
                 resource_type="user",
                 resource_id=user.id,
-                service_name="rbac-service",
+                service_name=settings.SERVICE_NAME,
                 metadata={},
             ),
             subject="audit.log.user",
@@ -102,6 +107,67 @@ async def handle_user_get(msg: UserRead) -> UserReaded:
     else:
         _log.info(f"Updated user: {msg.user_id}")
         return UserReaded(success=True)
+
+
+@broker.subscriber("user.list")
+@broker.publisher("user.listed")
+@broker.publisher("audit.log.user")
+async def handle_user_list(msg: UserList) -> UserListed:
+    try:
+        users = (
+            await UserService.list_users(role_id=msg.role_id, is_active=msg.is_active)
+            if msg.role_id or msg.is_active is not None
+            else await UserService.list_users()
+        )
+        for user in users:
+            await broker.publish(
+                AuditLog(
+                    user_id=msg.user_id,
+                    action="READ",
+                    resource_type="user",
+                    resource_id=user.id,
+                    service_name=settings.SERVICE_NAME,
+                    metadata={
+                        "action_detail": "listed in user list",
+                    },
+                ),
+                subject="audit.log.user",
+            )
+    except Exception as e:
+        _log.error(f"Error updating user: {e!s}")
+        return UserListed(success=False)
+    else:
+        _log.info(f"Updated user: {msg.user_id}")
+        return UserListed(success=True)
+
+
+@broker.subscriber("user.password.verify")
+@broker.publisher("user.password.verified")
+@broker.publisher("audit.log.user")
+async def handle_user_password_verify(
+    msg: UserPasswordVerify,
+) -> UserPasswordVerified:
+    try:
+        user = await UserService.verify_user_password(msg.email, msg.password)
+        await broker.publish(
+            AuditLog(
+                user_id=msg.user_id,
+                action="READ",
+                resource_type="user",
+                resource_id=user.id,
+                service_name=settings.SERVICE_NAME,
+                metadata={
+                    "action_detail": "password verification",
+                },
+            ),
+            subject="audit.log.user",
+        )
+    except Exception as e:
+        _log.error(f"Error updating user: {e!s}")
+        return UserPasswordVerified(success=False)
+    else:
+        _log.info(f"Updated user: {msg.user_id}")
+        return UserPasswordVerified(success=True)
 
 
 @broker.subscriber("user.delete")
@@ -116,7 +182,7 @@ async def handle_user_delete(msg: UserDelete) -> UserDeleted:
                 action="DELETE",
                 resource_type="user",
                 resource_id=user.id,
-                service_name="rbac-service",
+                service_name=settings.SERVICE_NAME,
                 metadata={},
             ),
             subject="audit.log.user",

@@ -1,6 +1,13 @@
 from faststream import FastStream
 from faststream.nats import NatsBroker
 
-broker = NatsBroker("nats://localhost:4222")
+from src.config import settings
 
-app = FastStream(broker, title="RBAC Service", version="0.1", description="Handles RBAC access to clinic resources")
+broker = NatsBroker(settings.NATS_CONNECTION_STR)
+
+app = FastStream(
+    broker,
+    title=settings.SERVICE_NAME,
+    version=settings.VERSION,
+    description=settings.SERVICE_DESCRIPTION,
+)
