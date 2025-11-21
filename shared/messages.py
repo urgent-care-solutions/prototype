@@ -67,12 +67,17 @@ class UserReaded(UserBase):
     success: bool = True
 
 
-class UserPasswordVerify(UserBase):
+class UserPasswordVerify(BaseMessage):
+    email: EmailStr
     password: SecretStr
 
 
-class UserPasswordVerified(UserPasswordVerify):
+class UserPasswordVerified(BaseMessage):
     success: bool = True
+    user_id: UUID4 | None = None
+    role_id: str | None = None
+    email: EmailStr | None = None
+    is_active: bool = False
 
 
 class UserList(UserBase):
@@ -253,6 +258,39 @@ class LocationDelete(BaseMessage):
 class LocationDeleted(BaseMessage):
     location_id: UUID4
     success: bool = True
+
+
+class AuthLoginRequest(BaseMessage):
+    email: EmailStr
+    password: SecretStr
+
+
+class AuthLoginResponse(BaseMessage):
+    success: bool
+    token: str | None = None
+    user_id: UUID4 | None = None
+    role_id: str | None = None
+    error: str | None = None
+
+
+class AuthVerifyRequest(BaseMessage):
+    token: str
+
+
+class AuthVerifyResponse(BaseMessage):
+    success: bool
+    user_id: UUID4 | None = None
+    role_id: str | None = None
+    email: EmailStr | None = None
+    is_active: bool = False
+
+
+class AuthLogoutRequest(BaseMessage):
+    token: str
+
+
+class AuthLogoutResponse(BaseMessage):
+    success: bool
 
 
 class AuditLog(BaseMessage):

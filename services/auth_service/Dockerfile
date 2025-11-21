@@ -11,4 +11,4 @@ RUN uv sync --no-dev && \
 
 USER app
 
-CMD [ "uv", "run", "main.py" ]
+CMD [ "uv", "run", "src/main.py" ]
