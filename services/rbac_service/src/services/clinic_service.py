@@ -8,20 +8,20 @@ from src.models import Clinic
 class ClinicService:
     @staticmethod
     async def get_clinic(clinic_id: uuid4) -> Clinic:
-        pass
+        raise NotImplementedError
 
     @staticmethod
     async def list_clinics() -> list[Clinic]:
-        pass
+        raise NotImplementedError
 
     @staticmethod
     async def create_clinic(clinic_data: ClinicCreate) -> Clinic:
-        pass
+        raise NotImplementedError
 
     @staticmethod
     async def update_clinic(clinic_id: uuid4, clinic_data: ClinicUpdate) -> Clinic:
-        pass
+        raise NotImplementedError
 
     @staticmethod
     async def delete_clinic(clinic_id: uuid4) -> Clinic:
-        pass
+        raise NotImplementedError

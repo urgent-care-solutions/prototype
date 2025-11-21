@@ -33,6 +33,14 @@ class UserBase(BaseMessage):
     email: EmailStr
 
 
+class UserRead(UserBase):
+    pass
+
+
+class UserReaded(UserBase):
+    success: bool = True
+
+
 class UserCreate(UserBase):
     pass
 
@@ -51,6 +59,10 @@ class UserUpdated(UserBase):
 
 class UserDelete(UserBase):
     pass
+
+
+class UserDeleted(UserBase):
+    success: bool = True
 
 
 class ClinicBase(BaseMessage):

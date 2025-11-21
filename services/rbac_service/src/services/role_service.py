@@ -8,23 +8,23 @@ from src.models import Role
 class RoleService:
     @staticmethod
     async def create_role(role_data: RoleCreate) -> Role:
-        pass
+        raise NotImplementedError
 
     @staticmethod
     async def get_role(role_id: uuid4) -> Role:
-        pass
+        raise NotImplementedError
 
     @staticmethod
     async def list_roles(*, is_active: bool | None = None) -> list[Role]:
-        pass
+        raise NotImplementedError
 
     @staticmethod
     async def update_role(role_id: uuid4, role_data: RoleUpdate) -> Role:
-        pass
+        raise NotImplementedError
 
     @staticmethod
     async def delete_role(role_id: uuid4) -> Role:
-        pass
+        raise NotImplementedError
 
     @staticmethod
     async def initialize_default_roles() -> list[Role]:
@@ -92,4 +92,4 @@ class RoleService:
                 },
             },
         ]
-        pass
+        raise NotImplementedError
