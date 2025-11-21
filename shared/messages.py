@@ -13,19 +13,33 @@ class BaseMessage(BaseModel):
 
 
 class BaseRole(BaseMessage):
-    pass
+    id: UUID4 = Field(default_factory=uuid.uuid4)
 
 
 class RoleCreate(BaseRole):
-    pass
+    name: str
+    description: str | None = None
+    permissions: dict[str, any] = Field(...)
+
+
+class RoleCreated(RoleCreate):
+    success: bool = True
 
 
 class RoleUpdate(BaseRole):
     pass
 
 
+class RoleUpdated(RoleUpdate):
+    success: bool = True
+
+
 class RoleDelete(BaseRole):
     pass
+
+
+class RoleDeleted(RoleDelete):
+    success: bool = True
 
 
 class UserBase(BaseMessage):

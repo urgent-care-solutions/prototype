@@ -65,7 +65,7 @@ class UserService:
             if not db_user:
                 raise ValueError(f"User {user_data.user_id} not found")
 
-            for field, value in user_data.dict(exclude_unset=True).items():
+            for field, value in user_data.model_dump(exclude_unset=True).items():
                 if field not in ["user_id", "message_id", "timestamp", "request_id"]:
                     setattr(db_user, field, value)
 
