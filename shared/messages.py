@@ -1,13 +1,17 @@
 import uuid
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from typing import Literal
 
-from pydantic import UUID4, BaseModel, EmailStr, Field, SecretStr
+from pydantic import UUID4, BaseModel, ConfigDict, EmailStr, Field, SecretStr
+
+UTC = timezone.utc
 
 
 class BaseMessage(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     message_id: UUID4 = Field(default_factory=uuid.uuid4)
-    timestamp: datetime = Field(default_factory=datetime.now(tz=UTC))
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(tz=UTC))
     user_id: UUID4 | None = None
     request_id: UUID4 | None = None
 
@@ -104,11 +108,17 @@ class UserDeleted(UserBase):
 
 
 class ClinicBase(BaseMessage):
-    pass
+    name: str
+    address: dict[str, any] | None = None
+    email: EmailStr | None = None
+    timezone: str = "America/New_York"
+    working_hours: dict[str, any] | None = None
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
 
 
 class ClinicRead(ClinicBase):
-    pass
+    clinic_id: UUID4
 
 
 class ClinicReaded(ClinicRead):
@@ -124,7 +134,8 @@ class ClinicCreated(ClinicCreate):
 
 
 class ClinicUpdate(ClinicBase):
-    pass
+    clinic_id: UUID4
+    name: str | None = None
 
 
 class ClinicUpdated(ClinicUpdate):
@@ -132,7 +143,7 @@ class ClinicUpdated(ClinicUpdate):
 
 
 class ClinicDelete(ClinicBase):
-    pass
+    clinic_id: UUID4
 
 
 class ClinicDeleted(ClinicDelete):
@@ -140,11 +151,20 @@ class ClinicDeleted(ClinicDelete):
 
 
 class DepartmentBase(BaseMessage):
-    pass
+    location_id: UUID4
+    name: str
+    type: str
+    floor: str | None = None
+    wing: str | None = None
+    phone: str | None = None
+    email: EmailStr | None = None
+    manager_id: UUID4 | None = None
+    is_active: bool = True
+    operating_hours: dict[str, any] | None = None
 
 
 class DepartmentRead(DepartmentBase):
-    pass
+    department_id: UUID4
 
 
 class DepartmentReaded(DepartmentRead):
@@ -159,8 +179,17 @@ class DepartmentCreated(DepartmentCreate):
     success: bool = True
 
 
-class DepartmentUpdate(DepartmentBase):
-    pass
+class DepartmentUpdate(BaseModel):
+    department_id: UUID4
+    name: str | None = None
+    type: str | None = None
+    floor: str | None = None
+    wing: str | None = None
+    phone: str | None = None
+    email: EmailStr | None = None
+    manager_id: UUID4 | None = None
+    is_active: bool | None = None
+    operating_hours: dict[str, any] | None = None
 
 
 class DepartmentUpdated(DepartmentUpdate):
@@ -172,6 +201,57 @@ class DepartmentDelete(DepartmentBase):
 
 
 class DepartmentDeleted(DepartmentDelete):
+    success: bool = True
+
+
+class LocationBase(BaseMessage):
+    clinic_id: UUID4
+    name: str
+    type: str
+    address: dict[str, any]
+    phone: str | None = None
+    email: EmailStr | None = None
+    manager_id: UUID4 | None = None
+    is_active: bool = True
+
+
+class LocationRead(BaseModel):
+    location_id: UUID4
+
+
+class LocationReaded(LocationBase):
+    success: bool = True
+
+
+class LocationCreate(LocationBase):
+    pass
+
+
+class LocationCreated(LocationBase):
+    success: bool = True
+
+
+class LocationUpdate(BaseModel):
+    location_id: UUID4
+    name: str | None = None
+    type: str | None = None
+    address: dict[str, any] | None = None
+    phone: str | None = None
+    email: EmailStr | None = None
+    manager_id: UUID4 | None = None
+    is_active: bool | None = None
+
+
+class LocationUpdated(LocationBase):
+    id: UUID4
+
+
+class LocationDelete(BaseMessage):
+    location_id: UUID4
+
+
+class LocationDeleted(BaseMessage):
+    location_id: UUID4
     success: bool = True
 
 
