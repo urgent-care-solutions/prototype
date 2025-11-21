@@ -2,7 +2,7 @@ import uuid
 from datetime import UTC, datetime
 from typing import Literal
 
-from pydantic import UUID4, BaseModel, EmailStr, Field
+from pydantic import UUID4, BaseModel, EmailStr, Field, SecretStr
 
 
 class BaseMessage(BaseModel):
@@ -14,6 +14,14 @@ class BaseMessage(BaseModel):
 
 class BaseRole(BaseMessage):
     id: UUID4 = Field(default_factory=uuid.uuid4)
+
+
+class RoleRead(BaseRole):
+    pass
+
+
+class RoleReaded(RoleRead):
+    success: bool = True
 
 
 class RoleCreate(BaseRole):
@@ -56,7 +64,7 @@ class UserReaded(UserBase):
 
 
 class UserCreate(UserBase):
-    pass
+    password: SecretStr
 
 
 class UserCreated(UserBase):
@@ -83,32 +91,72 @@ class ClinicBase(BaseMessage):
     pass
 
 
+class ClinicRead(ClinicBase):
+    pass
+
+
+class ClinicReaded(ClinicRead):
+    success: bool = True
+
+
 class ClinicCreate(ClinicBase):
     pass
+
+
+class ClinicCreated(ClinicCreate):
+    success: bool = True
 
 
 class ClinicUpdate(ClinicBase):
     pass
 
 
+class ClinicUpdated(ClinicUpdate):
+    success: bool = True
+
+
 class ClinicDelete(ClinicBase):
     pass
+
+
+class ClinicDeleted(ClinicDelete):
+    success: bool = True
 
 
 class DepartmentBase(BaseMessage):
     pass
 
 
+class DepartmentRead(DepartmentBase):
+    pass
+
+
+class DepartmentReaded(DepartmentRead):
+    success: bool = True
+
+
 class DepartmentCreate(DepartmentBase):
     pass
+
+
+class DepartmentCreated(DepartmentCreate):
+    success: bool = True
 
 
 class DepartmentUpdate(DepartmentBase):
     pass
 
 
+class DepartmentUpdated(DepartmentUpdate):
+    success: bool = True
+
+
 class DepartmentDelete(DepartmentBase):
     pass
+
+
+class DepartmentDeleted(DepartmentDelete):
+    success: bool = True
 
 
 class AuditLog(BaseMessage):

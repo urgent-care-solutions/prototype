@@ -41,7 +41,7 @@ class UserService:
             db_user = User(
                 role_id=user.role_id,
                 email=user.email,
-                password_hash=User.hash_password("temp_password"),
+                password_hash=User.hash_password(user.password.get_secret_value()),
                 first_name=getattr(user, "first_name", ""),
                 last_name=getattr(user, "last_name", ""),
             )
@@ -74,7 +74,7 @@ class UserService:
             return db_user
 
     @staticmethod
-    async def delete_user(user_id: UUID) -> bool:
+    async def delete_user(user_id: UUID) -> User:
         _log.debug(f"Attempting to delete user {user_id}")
         async with AsyncSessionLocal() as session:
             query = select(User).where(User.id == str(user_id))
@@ -82,11 +82,11 @@ class UserService:
             user = result.scalars().first()
 
             if not user:
-                return False
+                raise ValueError(f"User {user_id} not found")
 
             await session.delete(user)
             await session.commit()
-            return True
+            return user
 
     @staticmethod
     async def list_users(role_id: UUID | None = None, *, is_active: bool | None = None) -> list[User]:
@@ -116,7 +116,7 @@ class UserService:
         _log.debug(f"Attempting to get user {user_id} permissions")
         user = await UserService.get_user_by_id(user_id)
         if not user:
-            return {}
+            raise ValueError(f"User {user_id} not found")
 
         async with AsyncSessionLocal() as session:
             query = select(User).where(User.id == str(user_id))
