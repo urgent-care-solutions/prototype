@@ -47,36 +47,6 @@ async def handle_role_create(msg: RoleCreate) -> RoleCreated:
         return RoleCreated(success=True)
 
 
-@broker.subscriber("role.create")
-@broker.publisher("role.created")
-@broker.publisher("audit.log.role")
-async def handle_role_create(msg: RoleCreate) -> RoleCreated:
-    _log.debug(f"Handling role creation for role: {msg.role_name}")
-    try:
-        role = await RoleService.create_role(msg)
-        await broker.publish(
-            AuditLog(
-                user_id=msg.id,
-                action="CREATE",
-                resource_type="role",
-                resource_id=role.id,
-                service_name=settings.SERVICE_NAME,
-                metadata={
-                    "role_name": role.name,
-                    "description": role.description,
-                    "permissions": role.permissions,
-                },
-            ),
-            subject="audit.log.role",
-        )
-    except Exception as e:
-        _log.error(f"Error creating role: {e!s}")
-        return RoleCreated(success=False)
-    else:
-        _log.info(f"Created role: {role.id}")
-        return RoleCreated(success=True)
-
-
 @broker.subscriber("role.update")
 @broker.publisher("role.updated")
 @broker.publisher("audit.log.role")
