@@ -543,6 +543,41 @@ class DiagnosisResponse(BaseMessage):
     success: bool = True
 
 
+class TransactionBase(BaseMessage):
+    patient_id: UUID4
+    amount: float
+    currency: str = "USD"
+    status: Literal["pending", "success", "failed", "refunded"] = (
+        "pending"
+    )
+    description: str | None = None
+
+
+class ChargeCreate(TransactionBase):
+    appointment_id: UUID4 | None = None
+    payment_method_id: str = "mock_pm_123"
+
+
+class ChargeCreated(TransactionBase):
+    transaction_id: UUID4
+    success: bool = True
+    error_message: str | None = None
+
+
+class RefundCreate(BaseMessage):
+    transaction_id: UUID4
+    amount: float | None = None  # None = full refund
+    reason: str | None = None
+
+
+class RefundCreated(BaseMessage):
+    refund_transaction_id: UUID4
+    original_transaction_id: UUID4
+    amount: float
+    success: bool = True
+    error_message: str | None = None
+
+
 class AuditLog(BaseMessage):
     action: Literal["CREATE", "READ", "UPDATE", "DELETE"] = Field(...)
     resource_type: Literal[
@@ -557,6 +592,7 @@ class AuditLog(BaseMessage):
         "encounter",
         "vitals",
         "prescription",
+        "billing",
     ] = Field(...)
     resource_id: UUID4 | None = None
     service_name: str

@@ -24,6 +24,8 @@ services:
       - phi
     depends_on:
       - nats
+    volumes:
+      - ./services/rbac_service/database:/app/database
 
   auth:
     build: ./services/auth_service
@@ -43,6 +45,8 @@ services:
       - rbac
       - auth
       - nats
+    volumes:
+      - ./services/audit_service/database:/app/database
 
   patients:
     build: ./services/patients_service
@@ -53,6 +57,8 @@ services:
       - rbac
       - auth
       - nats
+    volumes:
+      - ./services/patients_service/database:/app/database
 
   appointments:
     build: ./services/appointments_service
@@ -63,10 +69,24 @@ services:
       - rbac
       - auth
       - nats
+    volumes:
+      - ./services/appointments_service/database:/app/database
 
   ehr:
     build: ./services/ehr_service
     container_name: ehr-service
+    networks:
+      - phi
+    depends_on:
+      - rbac
+      - auth
+      - nats
+    volumes:
+      - ./services/ehr_service/database:/app/database
+
+  integration:
+    build: ./services/integration_service
+    container_name: integration-service
     networks:
       - phi
     depends_on:
