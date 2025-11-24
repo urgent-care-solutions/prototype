@@ -64,6 +64,16 @@ services:
       - auth
       - nats
 
+  ehr:
+    build: ./services/ehr_service
+    container_name: ehr-service
+    networks:
+      - phi
+    depends_on:
+      - rbac
+      - auth
+      - nats
+
   nats:
     image: nats:2.12.2-alpine
     container_name: nats
