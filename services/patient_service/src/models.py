@@ -30,3 +30,7 @@ class Patient(Base):
         default=lambda: datetime.now(tz=UTC),
         onupdate=lambda: datetime.now(tz=UTC),
     )
+
+    user_id = Column(
+        String(36), nullable=False, unique=True
+    )  # Associated user ID
