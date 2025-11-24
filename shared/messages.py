@@ -2,7 +2,14 @@ import uuid
 from datetime import datetime, timezone
 from typing import Literal
 
-from pydantic import UUID4, BaseModel, ConfigDict, EmailStr, Field, SecretStr
+from pydantic import (
+    UUID4,
+    BaseModel,
+    ConfigDict,
+    EmailStr,
+    Field,
+    SecretStr,
+)
 
 UTC = timezone.utc
 
@@ -11,7 +18,9 @@ class BaseMessage(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     message_id: UUID4 = Field(default_factory=uuid.uuid4)
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(tz=UTC))
+    timestamp: datetime = Field(
+        default_factory=lambda: datetime.now(tz=UTC)
+    )
     user_id: UUID4 | None = None
     request_id: UUID4 | None = None
 
@@ -293,9 +302,66 @@ class AuthLogoutResponse(BaseMessage):
     success: bool
 
 
+class InsuranceData(BaseModel):
+    provider_name: str
+    policy_number: str
+
+
+class PatientBase(BaseMessage):
+    first_name: str
+    last_name: str
+    mrn: str
+    email: EmailStr | None = None
+    insurance: InsuranceData | None = None
+    is_active: bool = True
+
+
+class PatientCreate(PatientBase):
+    pass
+
+
+class PatientCreated(PatientBase):
+    id: UUID4
+    success: bool = True
+
+
+class PatientRead(BaseMessage):
+    patient_id: UUID4
+
+
+class PatientReaded(PatientBase):
+    id: UUID4
+    success: bool = True
+
+
+class PatientUpdate(BaseMessage):
+    patient_id: UUID4
+    first_name: str | None = None
+    last_name: str | None = None
+    email: EmailStr | None = None
+    insurance: InsuranceData | None = None
+    is_active: bool | None = None
+
+
+class PatientUpdated(PatientBase):
+    id: UUID4
+    success: bool = True
+
+
+class PatientDelete(BaseMessage):
+    patient_id: UUID4
+
+
+class PatientDeleted(BaseMessage):
+    patient_id: UUID4
+    success: bool = True
+
+
 class AuditLog(BaseMessage):
     action: Literal["CREATE", "READ", "UPDATE", "DELETE"] = Field(...)
-    resource_type: Literal["patient", "user", "appointment"] = Field(...)
+    resource_type: Literal["patient", "user", "appointment"] = Field(
+        ...
+    )
     resource_id: UUID4 | None = None
     service_name: str
     metadata: dict[str, any] | None = None
