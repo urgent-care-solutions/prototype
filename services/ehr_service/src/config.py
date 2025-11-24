@@ -1,8 +1,10 @@
 from pathlib import Path
+
 import toml
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 THIS_DIR = Path(__file__).parent
+
 
 class Settings(BaseSettings):
     SERVICE_NAME: str
@@ -17,6 +19,7 @@ class Settings(BaseSettings):
         env_prefix="PHI__EHR__",
         env_file_encoding="utf8",
     )
+
 
 with Path(THIS_DIR.parent / "pyproject.toml").open("r") as f:
     pp_data = toml.load(f)
