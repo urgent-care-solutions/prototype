@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime, timezone
+from datetime import date, datetime, time, timezone
 from typing import Literal
 
 from pydantic import (
@@ -357,11 +357,114 @@ class PatientDeleted(BaseMessage):
     success: bool = True
 
 
+class AppointmentType(BaseModel):
+    INITIAL = "initial"
+    FOLLOW_UP = "follow_up"
+    TELEMEDICINE = "telemedicine"
+
+
+class ScheduleBase(BaseMessage):
+    provider_id: UUID4
+    day_of_week: int = Field(
+        ..., ge=0, le=6, description="0=Monday, 6=Sunday"
+    )
+    start_time: time
+    end_time: time
+    is_active: bool = True
+
+
+class ScheduleCreate(ScheduleBase):
+    pass
+
+
+class ScheduleCreated(ScheduleBase):
+    id: UUID4
+    success: bool = True
+
+
+class ScheduleRead(BaseMessage):
+    provider_id: UUID4
+
+
+class ScheduleList(BaseModel):
+    schedules: list[ScheduleCreated]
+
+
+class AvailabilityRequest(BaseMessage):
+    provider_id: UUID4
+    date: date
+
+
+class TimeSlot(BaseModel):
+    start: datetime
+    end: datetime
+    available: bool
+
+
+class AvailabilityResponse(BaseMessage):
+    provider_id: UUID4
+    date: date
+    slots: list[TimeSlot]
+
+
+class AppointmentBase(BaseMessage):
+    patient_id: UUID4
+    provider_id: UUID4
+    start_time: datetime
+    appointment_type: Literal["initial", "follow_up", "telemedicine"]
+    reason: str | None = None
+    status: Literal["scheduled", "canceled", "completed", "no_show"] = (
+        "scheduled"
+    )
+
+
+class AppointmentCreate(BaseMessage):
+    patient_id: UUID4
+    provider_id: UUID4
+    start_time: datetime
+    appointment_type: Literal["initial", "follow_up", "telemedicine"]
+    reason: str | None = None
+
+
+class AppointmentCreated(AppointmentBase):
+    id: UUID4
+    end_time: datetime
+    success: bool = True
+    error: str | None = None
+
+
+class AppointmentCancel(BaseMessage):
+    appointment_id: UUID4
+    reason: str | None = None
+
+
+class AppointmentCanceled(BaseMessage):
+    appointment_id: UUID4
+    success: bool = True
+
+
+class AppointmentRead(BaseMessage):
+    appointment_id: UUID4
+
+
+class AppointmentReaded(AppointmentBase):
+    id: UUID4
+    end_time: datetime
+    success: bool = True
+
+
 class AuditLog(BaseMessage):
     action: Literal["CREATE", "READ", "UPDATE", "DELETE"] = Field(...)
-    resource_type: Literal["patient", "user", "appointment"] = Field(
-        ...
-    )
+    resource_type: Literal[
+        "patient",
+        "user",
+        "appointment",
+        "role",
+        "clinic",
+        "department",
+        "location",
+        "schedule",
+    ] = Field(...)
     resource_id: UUID4 | None = None
     service_name: str
     metadata: dict[str, any] | None = None

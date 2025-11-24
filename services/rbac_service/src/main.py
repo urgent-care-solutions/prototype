@@ -14,6 +14,7 @@ import src.handlers.user_handler  # noqa: F401
 from src.broker import broker
 from src.config import settings
 from src.database import engine
+from src.services.role_service import RoleService
 
 # Setup logging
 FORMAT = "%(message)s"
@@ -31,6 +32,12 @@ _log = logging.getLogger(settings.LOGGER)
 async def lifespan(app):
     _log.info(f"Starting {settings.SERVICE_NAME}...")
     await broker.connect()
+
+    try:
+        await RoleService.initialize_default_roles()
+    except Exception as e:
+        _log.error(f"Error initializing default roles: {e}")
+
     yield
     await broker.close()
     await engine.dispose()

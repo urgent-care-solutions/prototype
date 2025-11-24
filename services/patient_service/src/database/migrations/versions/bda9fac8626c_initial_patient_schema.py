@@ -1,8 +1,8 @@
 """Initial patient schema
 
-Revision ID: 5ed8c145ee84
+Revision ID: bda9fac8626c
 Revises: 
-Create Date: 2025-11-24 11:03:55.050406
+Create Date: 2025-11-24 11:26:00.679115
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '5ed8c145ee84'
+revision: str = 'bda9fac8626c'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -31,8 +31,10 @@ def upgrade() -> None:
     sa.Column('is_active', sa.Boolean(), nullable=True),
     sa.Column('created_at', sa.DateTime(), nullable=True),
     sa.Column('updated_at', sa.DateTime(), nullable=True),
+    sa.Column('user_id', sa.String(length=36), nullable=False),
     sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('mrn')
+    sa.UniqueConstraint('mrn'),
+    sa.UniqueConstraint('user_id')
     )
     # ### end Alembic commands ###
 

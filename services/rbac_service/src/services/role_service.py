@@ -171,6 +171,19 @@ class RoleService:
                     "reports": ["read", "export"],
                 },
             },
+            {
+                "name": "Patient",
+                "description": "Access to personal health portal, appointments, and records",
+                "permissions": {
+                    "patients": ["read"],  # Read own demographics
+                    "appointments": [
+                        "read",
+                        "write",
+                    ],  # Schedule/View appointments
+                    "medical_records": ["read"],  # View own history
+                    "billing": ["read"],  # View own bills
+                },
+            },
         ]
 
         async with AsyncSessionLocal() as session:
