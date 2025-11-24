@@ -453,6 +453,96 @@ class AppointmentReaded(AppointmentBase):
     success: bool = True
 
 
+class VitalsBase(BaseMessage):
+    encounter_id: UUID4 | None = None
+    patient_id: UUID4
+    height_cm: float | None = None
+    weight_kg: float | None = None
+    temperature_c: float | None = None
+    systolic: int | None = None
+    diastolic: int | None = None
+    heart_rate: int | None = None
+    respiratory_rate: int | None = None
+    oxygen_saturation: float | None = None
+
+
+class VitalsCreate(VitalsBase):
+    pass
+
+
+class VitalsCreated(VitalsBase):
+    id: UUID4
+    success: bool = True
+
+
+class PrescriptionBase(BaseMessage):
+    encounter_id: UUID4 | None = None
+    patient_id: UUID4
+    provider_id: UUID4
+    medication_name: str
+    dosage: str
+    frequency: str
+    duration_days: int
+    instructions: str | None = None
+    status: Literal["active", "completed", "cancelled"] = "active"
+
+
+class PrescriptionCreate(PrescriptionBase):
+    pass
+
+
+class PrescriptionCreated(PrescriptionBase):
+    id: UUID4
+    success: bool = True
+
+
+class DiagnosisCode(BaseModel):
+    code: str
+    description: str
+
+
+class EncounterBase(BaseMessage):
+    appointment_id: UUID4 | None = None
+    patient_id: UUID4
+    provider_id: UUID4
+    date: datetime
+    # SOAP Note structure
+    subjective: str | None = None
+    objective: str | None = None
+    assessment: str | None = None
+    plan: str | None = None
+    diagnosis_codes: list[DiagnosisCode] = []
+
+
+class EncounterCreate(EncounterBase):
+    pass
+
+
+class EncounterCreated(EncounterBase):
+    id: UUID4
+    success: bool = True
+
+
+class EncounterRead(BaseMessage):
+    encounter_id: UUID4
+
+
+class EncounterReaded(EncounterBase):
+    id: UUID4
+    vitals: list[VitalsCreated] = []
+    prescriptions: list[PrescriptionCreated] = []
+    success: bool = True
+
+
+class DiagnosisSearch(BaseMessage):
+    query: str
+
+
+class DiagnosisResponse(BaseMessage):
+    results: list[DiagnosisCode]
+    success: bool = True
+
+
 class AuditLog(BaseMessage):
     action: Literal["CREATE", "READ", "UPDATE", "DELETE"] = Field(...)
     resource_type: Literal[
@@ -464,6 +554,9 @@ class AuditLog(BaseMessage):
         "department",
         "location",
         "schedule",
+        "encounter",
+        "vitals",
+        "prescription",
     ] = Field(...)
     resource_id: UUID4 | None = None
     service_name: str
