@@ -204,6 +204,7 @@ def generate_service(service_name: str):
 
     # Cleanup
     (service_path / "hello.py").unlink(missing_ok=True)
+    (service_path / "main.py").unlink(missing_ok=True)
 
     # Create DB/Migrations folder structure
     (service_path / "database/migrations").mkdir(

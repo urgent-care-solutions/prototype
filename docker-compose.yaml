@@ -84,7 +84,7 @@ services:
     volumes:
       - ./services/ehr_service/database:/app/database
 
-  integration:
+  billing:
     build: ./services/integration_service
     container_name: integration-service
     networks:
@@ -93,6 +93,20 @@ services:
       - rbac
       - auth
       - nats
+    volumes:
+      - ./services/integration_service/database:/app/database
+
+  notification:
+    build: ./services/notification_service
+    container_name: notification-service
+    networks:
+      - phi
+    depends_on:
+      - rbac
+      - auth
+      - nats
+    volumes:
+      - ./services/notification_service/database:/app/database
 
   nats:
     image: nats:2.12.2-alpine

@@ -578,6 +578,14 @@ class RefundCreated(BaseMessage):
     error_message: str | None = None
 
 
+class NotificationSent(BaseMessage):
+    recipient: str
+    channel: Literal["email", "sms"]
+    subject: str | None = None
+    content: str
+    status: Literal["sent", "failed"]
+
+
 class AuditLog(BaseMessage):
     action: Literal["CREATE", "READ", "UPDATE", "DELETE"] = Field(...)
     resource_type: Literal[
@@ -593,6 +601,8 @@ class AuditLog(BaseMessage):
         "vitals",
         "prescription",
         "billing",
+        "notification",
+        "auth",
     ] = Field(...)
     resource_id: UUID4 | None = None
     service_name: str
