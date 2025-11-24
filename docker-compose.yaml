@@ -44,6 +44,26 @@ services:
       - auth
       - nats
 
+  patients:
+    build: ./services/patients_service
+    container_name: patients-service
+    networks:
+      - phi
+    depends_on:
+      - rbac
+      - auth
+      - nats
+
+  appointments:
+    build: ./services/appointments_service
+    container_name: appointments-service
+    networks:
+      - phi
+    depends_on:
+      - rbac
+      - auth
+      - nats
+
   nats:
     image: nats:2.12.2-alpine
     container_name: nats
