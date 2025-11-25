@@ -586,6 +586,48 @@ class NotificationSent(BaseMessage):
     status: Literal["sent", "failed"]
 
 
+class DateRangeRequest(BaseMessage):
+    start_date: date | None = None
+    end_date: date | None = None
+
+
+class RevenueStats(BaseModel):
+    total_revenue: float = 0.0
+    transaction_count: int = 0
+    refund_amount: float = 0.0
+    net_revenue: float = 0.0
+    currency: str = "USD"
+
+
+class RevenueReportResponse(BaseMessage):
+    period_start: date | None
+    period_end: date | None
+    stats: RevenueStats
+    success: bool = True
+
+
+class AppointmentStats(BaseModel):
+    total: int = 0
+    by_status: dict[str, int] = {}
+    by_type: dict[str, int] = {}
+
+
+class AppointmentReportResponse(BaseMessage):
+    stats: AppointmentStats
+    success: bool = True
+
+
+class PatientStats(BaseModel):
+    total_patients: int = 0
+    new_patients_in_period: int = 0
+    active_patients: int = 0
+
+
+class PatientReportResponse(BaseMessage):
+    stats: PatientStats
+    success: bool = True
+
+
 class AuditLog(BaseMessage):
     action: Literal["CREATE", "READ", "UPDATE", "DELETE"] = Field(...)
     resource_type: Literal[
