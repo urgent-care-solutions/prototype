@@ -108,6 +108,18 @@ services:
     volumes:
       - ./services/notification_service/database:/app/database
 
+  reporting:
+    build: ./services/reporting_service
+    container_name: reporting-service
+    networks:
+      - phi
+    depends_on:
+      - rbac
+      - auth
+      - nats
+    volumes:
+      - ./services/reporting_service/database:/app/database
+
   nats:
     image: nats:2.12.2-alpine
     container_name: nats
