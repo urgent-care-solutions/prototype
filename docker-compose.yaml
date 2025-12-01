@@ -3,6 +3,7 @@ services:
     build:
       context: .
       dockerfile: ./gateway/Dockerfile
+    restart: always
     container_name: api-gateway
     healthcheck:
       test: [ "CMD", "wget", "--spider", "-q", "http://localhost:8000/healthz" ]
@@ -23,6 +24,7 @@ services:
     build:
       context: .
       dockerfile: ./services/rbac_service/Dockerfile
+    restart: always
     container_name: rbac-service
     command: >
       sh -c "touch /app/services/rbac_service/database/rbac.db &&
@@ -45,6 +47,7 @@ services:
     build:
       context: .
       dockerfile: ./services/auth_service/Dockerfile
+    restart: always
     container_name: auth-service
     healthcheck:
       test: [ "CMD", "wget", "--spider", "-q", "http://localhost:8030/healthz" ]
@@ -64,6 +67,7 @@ services:
     build:
       context: .
       dockerfile: ./services/audit_service/Dockerfile
+    restart: always
     container_name: audit-service
     command: >
       sh -c "touch /app/services/audit_service/database/audit.db &&
@@ -88,6 +92,7 @@ services:
     build:
       context: .
       dockerfile: ./services/patient_service/Dockerfile
+    restart: always
     container_name: patients-service
     command: >
       sh -c "touch /app/services/patient_service/database/patients.db &&
@@ -114,6 +119,7 @@ services:
     build:
       context: .
       dockerfile: ./services/appointments_service/Dockerfile
+    restart: always
     container_name: appointments-service
     command: >
       sh -c "touch /app/services/appointments_service/database/appointments.db &&
@@ -140,6 +146,7 @@ services:
     build:
       context: .
       dockerfile: ./services/ehr_service/Dockerfile
+    restart: always
     container_name: ehr-service
     command: >
       sh -c "touch /app/services/ehr_service/database/ehr.db &&
@@ -166,6 +173,7 @@ services:
     build:
       context: .
       dockerfile: ./services/integration_service/Dockerfile
+    restart: always
     container_name: integration-service
     command: >
       sh -c "touch /app/services/integration_service/database/integration.db &&
@@ -192,6 +200,7 @@ services:
     build:
       context: .
       dockerfile: ./services/notification_service/Dockerfile
+    restart: always
     container_name: notification-service
     command: >
       sh -c "touch /app/services/notification_service/database/notification.db &&
@@ -218,6 +227,7 @@ services:
     build:
       context: .
       dockerfile: ./services/reporting_service/Dockerfile
+    restart: always
     container_name: reporting-service
     command: >
       sh -c "touch /app/services/reporting_service/database/reporting.db &&
@@ -239,6 +249,39 @@ services:
       - nats
     volumes:
       - reporting_data:/app/services/reporting_service/database
+
+  seeder:
+    build:
+      context: .
+      dockerfile: ./seeder/Dockerfile
+    container_name: data-seeder
+    restart: no
+    environment:
+      - SEED_DATA=${SEED_DATA:-false}
+    volumes:
+      - rbac_data:/data/rbac
+      - patients_data:/data/patients
+      - appointments_data:/data/appointments
+      - ehr_data:/data/ehr
+      - billing_data:/data/billing
+      - notification_data:/data/notification
+      - reporting_data:/data/reporting
+      - audit_data:/data/audit
+    depends_on:
+      rbac:
+        condition: service_healthy
+      patients:
+        condition: service_healthy
+      appointments:
+        condition: service_healthy
+      ehr:
+        condition: service_healthy
+      billing:
+        condition: service_healthy
+      reporting:
+        condition: service_healthy
+    networks:
+      - phi
 
   nats:
     image: nats:2.12.2-alpine
