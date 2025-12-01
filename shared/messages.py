@@ -90,6 +90,7 @@ class UserPasswordVerified(BaseMessage):
 
 
 class UserList(BaseMessage):
+    role_id: str | None = None
     is_active: bool | None = None
 
 

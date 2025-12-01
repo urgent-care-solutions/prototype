@@ -145,12 +145,21 @@ async def handle_user_list(msg: UserList) -> UserListed:
                 ),
                 subject="audit.log.user",
             )
+            user_list_data = [
+                UserReaded(
+                    user_id=u.id,
+                    email=u.email,
+                    role_id=u.role_id,
+                    success=True,
+                )
+                for u in users
+            ]
     except Exception as e:
         _log.error(f"Error updating user: {e!s}")
         return UserListed(success=False)
     else:
         _log.info(f"Updated user: {msg.user_id}")
-        return UserListed(success=True)
+        return UserListed(success=True, users=user_list_data)
 
 
 @broker.subscriber("user.password.verify")
