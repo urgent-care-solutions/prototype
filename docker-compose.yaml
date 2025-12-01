@@ -1,6 +1,8 @@
 services:
   gateway:
-    build: ./gateway
+    build:
+      context: .
+      dockerfile: ./services/api_gateway/Dockerfile
     container_name: api-gateway
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8000/healthz" ]
@@ -18,7 +20,9 @@ services:
       - audit
 
   rbac:
-    build: ./services/rbac_service
+    build:
+      context: .
+      dockerfile: ./services/rbac_service/Dockerfile
     container_name: rbac-service
     networks:
       - phi
@@ -28,7 +32,9 @@ services:
       - ./services/rbac_service/database:/app/database
 
   auth:
-    build: ./services/auth_service
+    build:
+      context: .
+      dockerfile: ./services/auth_service/Dockerfile
     container_name: auth-service
     networks:
       - phi
@@ -37,7 +43,9 @@ services:
       - nats
 
   audit:
-    build: ./services/audit_service
+    build:
+      context: .
+      dockerfile: ./services/audit_service/Dockerfile
     container_name: audit-service
     networks:
       - phi
@@ -49,7 +57,9 @@ services:
       - ./services/audit_service/database:/app/database
 
   patients:
-    build: ./services/patient_service
+    build:
+      context: .
+      dockerfile: ./services/patient_service/Dockerfile
     container_name: patients-service
     networks:
       - phi
@@ -61,7 +71,9 @@ services:
       - ./services/patient_service/database:/app/database
 
   appointments:
-    build: ./services/appointments_service
+    build:
+      context: .
+      dockerfile: ./services/appointments_service/Dockerfile
     container_name: appointments-service
     networks:
       - phi
@@ -73,7 +85,9 @@ services:
       - ./services/appointments_service/database:/app/database
 
   ehr:
-    build: ./services/ehr_service
+    build:
+      context: .
+      dockerfile: ./services/ehr_service/Dockerfile
     container_name: ehr-service
     networks:
       - phi
@@ -85,7 +99,9 @@ services:
       - ./services/ehr_service/database:/app/database
 
   billing:
-    build: ./services/integration_service
+    build:
+      context: .
+      dockerfile: ./services/integration_service/Dockerfile
     container_name: integration-service
     networks:
       - phi
@@ -97,7 +113,9 @@ services:
       - ./services/integration_service/database:/app/database
 
   notification:
-    build: ./services/notification_service
+    build:
+      context: .
+      dockerfile: ./services/notification_service/Dockerfile
     container_name: notification-service
     networks:
       - phi
@@ -109,7 +127,9 @@ services:
       - ./services/notification_service/database:/app/database
 
   reporting:
-    build: ./services/reporting_service
+    build:
+      context: .
+      dockerfile: ./services/reporting_service/Dockerfile
     container_name: reporting-service
     networks:
       - phi

@@ -1,12 +1,13 @@
 FROM ghcr.io/astral-sh/uv:alpine3.22
 
 WORKDIR /app
-COPY . .
 
-# Ensure database dir exists
-RUN mkdir -p database
+COPY shared /app/shared
+COPY services/ehr_service /app/services/ehr_service
 
-RUN uv sync --no-dev && \
+WORKDIR /app/services/ehr_service
+
+RUN uv sync --frozen --no-dev && \
     addgroup -g 1001 -S app && \
     adduser -u 1001 -S app -G app && \
     chown -R app:app /app
