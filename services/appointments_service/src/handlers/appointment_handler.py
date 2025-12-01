@@ -62,6 +62,7 @@ def register_handlers(broker: NatsBroker):
         except ValueError as e:
             _log.error(f"Business error creating appointment: {e}")
             return AppointmentCreated(
+                id=uuid.uuid4(),  # dummy
                 success=False,
                 error=str(e),
                 patient_id=msg.patient_id,
@@ -73,6 +74,7 @@ def register_handlers(broker: NatsBroker):
         except Exception as e:
             _log.error(f"System error creating appointment: {e}")
             return AppointmentCreated(
+                id=uuid.uuid4(),  # dummy
                 success=False,
                 error="Internal Server Error",
                 patient_id=msg.patient_id,

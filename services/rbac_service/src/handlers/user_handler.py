@@ -145,15 +145,15 @@ async def handle_user_list(msg: UserList) -> UserListed:
                 ),
                 subject="audit.log.user",
             )
-            user_list_data = [
-                UserReaded(
-                    user_id=u.id,
-                    email=u.email,
-                    role_id=u.role_id,
-                    success=True,
-                )
-                for u in users
-            ]
+        user_list_data = [
+            UserReaded(
+                user_id=u.id,
+                email=u.email,
+                role_id=u.role_id,
+                success=True,
+            )
+            for u in users
+        ]
     except Exception as e:
         _log.error(f"Error updating user: {e!s}")
         return UserListed(success=False)
