@@ -147,7 +147,7 @@ class RoleService:
                 "name": "Front Desk",
                 "description": "Scheduling and patient registration",
                 "permissions": {
-                    "patients": ["read", "write_demographics"],
+                    "patients": ["read", "write"],
                     "appointments": ["read", "write"],
                     "reports": ["read"],
                 },
