@@ -24,6 +24,9 @@ services:
       context: .
       dockerfile: ./services/rbac_service/Dockerfile
     container_name: rbac-service
+    command: >
+      sh -c "uv run alembic upgrade head &&
+             uv run faststream run src.main:app --host 0.0.0.0 --port 8080"
     healthcheck:
       test: [ "CMD", "wget", "--spider", "-q", "http://localhost:8080/healthz" ]
       interval: 10s
@@ -42,6 +45,9 @@ services:
       context: .
       dockerfile: ./services/auth_service/Dockerfile
     container_name: auth-service
+    command: >
+      sh -c "uv run alembic upgrade head &&
+             uv run faststream run src.main:app --host 0.0.0.0 --port 8030"
     healthcheck:
       test: [ "CMD", "wget", "--spider", "-q", "http://localhost:8030/healthz" ]
       interval: 10s
@@ -61,6 +67,9 @@ services:
       context: .
       dockerfile: ./services/audit_service/Dockerfile
     container_name: audit-service
+    command: >
+      sh -c "uv run alembic upgrade head &&
+             uv run faststream run src.main:app --host 0.0.0.0 --port 8020"
     healthcheck:
       test: [ "CMD", "wget", "--spider", "-q", "http://localhost:8020/healthz" ]
       interval: 10s
@@ -81,6 +90,9 @@ services:
       context: .
       dockerfile: ./services/patient_service/Dockerfile
     container_name: patients-service
+    command: >
+      sh -c "uv run alembic upgrade head &&
+             uv run faststream run src.main:app --host 0.0.0.0 --port 8100"
     healthcheck:
       test: [ "CMD", "wget", "--spider", "-q", "http://localhost:8100/healthz" ]
       interval: 10s
@@ -103,6 +115,9 @@ services:
       context: .
       dockerfile: ./services/appointments_service/Dockerfile
     container_name: appointments-service
+    command: >
+      sh -c "uv run alembic upgrade head &&
+             uv run faststream run src.main:app --host 0.0.0.0 --port 8010"
     healthcheck:
       test: [ "CMD", "wget", "--spider", "-q", "http://localhost:8010/healthz" ]
       interval: 10s
@@ -125,6 +140,9 @@ services:
       context: .
       dockerfile: ./services/ehr_service/Dockerfile
     container_name: ehr-service
+    command: >
+      sh -c "uv run alembic upgrade head &&
+             uv run faststream run src.main:app --host 0.0.0.0 --port 8200"
     healthcheck:
       test: [ "CMD", "wget", "--spider", "-q", "http://localhost:8200/healthz" ]
       interval: 10s
@@ -147,6 +165,9 @@ services:
       context: .
       dockerfile: ./services/integration_service/Dockerfile
     container_name: integration-service
+    command: >
+      sh -c "uv run alembic upgrade head &&
+             uv run faststream run src.main:app --host 0.0.0.0 --port 8300"
     healthcheck:
       test: [ "CMD", "wget", "--spider", "-q", "http://localhost:8300/healthz" ]
       interval: 10s
@@ -169,6 +190,9 @@ services:
       context: .
       dockerfile: ./services/notification_service/Dockerfile
     container_name: notification-service
+    command: >
+      sh -c "uv run alembic upgrade head &&
+             uv run faststream run src.main:app --host 0.0.0.0 --port 8400"
     healthcheck:
       test: [ "CMD", "wget", "--spider", "-q", "http://localhost:8400/healthz" ]
       interval: 10s
@@ -191,6 +215,9 @@ services:
       context: .
       dockerfile: ./services/reporting_service/Dockerfile
     container_name: reporting-service
+    command: >
+      sh -c "uv run alembic upgrade head &&
+             uv run faststream run src.main:app --host 0.0.0.0 --port 8500"
     healthcheck:
       test: [ "CMD", "wget", "--spider", "-q", "http://localhost:8500/healthz" ]
       interval: 10s

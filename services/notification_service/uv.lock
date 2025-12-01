@@ -206,6 +206,7 @@ version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
     { name = "aiosqlite" },
+    { name = "alembic" },
     { name = "faststream", extra = ["nats"] },
     { name = "pydantic-settings" },
     { name = "rich" },
@@ -216,7 +217,6 @@ dependencies = [
 
 [package.dev-dependencies]
 dev = [
-    { name = "alembic" },
     { name = "pytest" },
     { name = "ruff" },
 ]
@@ -224,6 +224,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "aiosqlite", specifier = ">=0.21.0" },
+    { name = "alembic", specifier = ">=1.17.2" },
     { name = "faststream", extras = ["nats"], specifier = ">=0.6.3" },
     { name = "pydantic-settings", specifier = ">=2.12.0" },
     { name = "rich", specifier = ">=14.2.0" },
@@ -234,7 +235,6 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "alembic", specifier = ">=1.17.2" },
     { name = "pytest", specifier = ">=9.0.1" },
     { name = "ruff", specifier = ">=0.14.6" },
 ]
@@ -400,7 +400,7 @@ wheels = [
 
 [[package]]
 name = "shared-messages"
-version = "0.3.0"
+version = "0.5.2"
 source = { editable = "../../shared" }
 dependencies = [
     { name = "pydantic" },
