@@ -2,7 +2,7 @@ services:
   gateway:
     build:
       context: .
-      dockerfile: ./services/api_gateway/Dockerfile
+      dockerfile: ./gateway/Dockerfile
     container_name: api-gateway
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8000/healthz" ]
