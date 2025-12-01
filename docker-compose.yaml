@@ -58,7 +58,7 @@ services:
       - auth
       - nats
     volumes:
-      - ./services/patients_service/database:/app/database
+      - ./services/patient_service/database:/app/database
 
   appointments:
     build: ./services/appointments_service
