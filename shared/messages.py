@@ -1,6 +1,6 @@
 import uuid
 from datetime import date, datetime, time, timezone
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import (
     UUID4,
@@ -40,7 +40,7 @@ class RoleReaded(RoleRead):
 class RoleCreate(BaseRole):
     name: str
     description: str | None = None
-    permissions: dict[str, any] = Field(...)
+    permissions: dict[str, Any] = Field(...)
 
 
 class RoleCreated(RoleCreate):
@@ -125,10 +125,10 @@ class UserDeleted(UserBase):
 
 class ClinicBase(BaseMessage):
     name: str
-    address: dict[str, any] | None = None
+    address: dict[str, Any] | None = None
     email: EmailStr | None = None
     timezone: str = "America/New_York"
-    working_hours: dict[str, any] | None = None
+    working_hours: dict[str, Any] | None = None
     created_at: datetime | None = None
     updated_at: datetime | None = None
 
@@ -176,7 +176,7 @@ class DepartmentBase(BaseMessage):
     email: EmailStr | None = None
     manager_id: UUID4 | None = None
     is_active: bool = True
-    operating_hours: dict[str, any] | None = None
+    operating_hours: dict[str, Any] | None = None
 
 
 class DepartmentRead(DepartmentBase):
@@ -205,7 +205,7 @@ class DepartmentUpdate(BaseModel):
     email: EmailStr | None = None
     manager_id: UUID4 | None = None
     is_active: bool | None = None
-    operating_hours: dict[str, any] | None = None
+    operating_hours: dict[str, Any] | None = None
 
 
 class DepartmentUpdated(DepartmentUpdate):
@@ -224,7 +224,7 @@ class LocationBase(BaseMessage):
     clinic_id: UUID4
     name: str
     type: str
-    address: dict[str, any]
+    address: dict[str, Any]
     phone: str | None = None
     email: EmailStr | None = None
     manager_id: UUID4 | None = None
@@ -251,7 +251,7 @@ class LocationUpdate(BaseModel):
     location_id: UUID4
     name: str | None = None
     type: str | None = None
-    address: dict[str, any] | None = None
+    address: dict[str, Any] | None = None
     phone: str | None = None
     email: EmailStr | None = None
     manager_id: UUID4 | None = None
@@ -651,5 +651,5 @@ class AuditLog(BaseMessage):
     ] = Field(...)
     resource_id: UUID4 | None = None
     service_name: str
-    metadata: dict[str, any] | None = None
+    metadata: dict[str, Any] | None = None
     success: bool = True
