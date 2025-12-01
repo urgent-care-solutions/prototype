@@ -156,7 +156,7 @@ async def handle_user_list(msg: UserList) -> UserListed:
         ]
     except Exception as e:
         _log.error(f"Error updating user: {e!s}")
-        return UserListed(success=False)
+        return UserListed(success=False, users=[])
     else:
         _log.info(f"Updated user: {msg.user_id}")
         return UserListed(success=True, users=user_list_data)

@@ -95,7 +95,7 @@ class UserList(BaseMessage):
 
 
 class UserListed(BaseMessage):
-    users: list[UserReaded]
+    users: list[UserReaded] = []
     success: bool = True
 
 

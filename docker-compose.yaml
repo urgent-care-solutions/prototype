@@ -35,7 +35,7 @@ services:
     depends_on:
       - nats
     volumes:
-      - ./services/rbac_service/database:/app/database
+      - ./services/rbac_service/database:/app/services/rbac_service/database
 
   auth:
     build:
@@ -74,7 +74,7 @@ services:
     depends_on:
       - nats
     volumes:
-      - ./services/audit_service/database:/app/database
+      - ./services/audit_service/database:/app/services/audit_service/database
 
   patients:
     build:
@@ -96,7 +96,7 @@ services:
       - auth
       - nats
     volumes:
-      - ./services/patient_service/database:/app/database
+      - ./services/patient_service/database:/app/services/patient_service/database
 
   appointments:
     build:
@@ -118,7 +118,7 @@ services:
       - auth
       - nats
     volumes:
-      - ./services/appointments_service/database:/app/database
+      - ./services/appointments_service/database:/app/services/appointments_service/database
 
   ehr:
     build:
@@ -140,7 +140,7 @@ services:
       - auth
       - nats
     volumes:
-      - ./services/ehr_service/database:/app/database
+      - ./services/ehr_service/database:/app/services/ehr_service/database
 
   billing:
     build:
@@ -162,7 +162,7 @@ services:
       - auth
       - nats
     volumes:
-      - ./services/integration_service/database:/app/database
+      - ./services/integration_service/database:/app/services/integration_service/database
 
   notification:
     build:
@@ -184,7 +184,7 @@ services:
       - auth
       - nats
     volumes:
-      - ./services/notification_service/database:/app/database
+      - ./services/notification_service/database:/app/services/notification_service/database
 
   reporting:
     build:
@@ -206,7 +206,7 @@ services:
       - auth
       - nats
     volumes:
-      - ./services/reporting_service/database:/app/database
+      - ./services/reporting_service/database:/app/services/reporting_service/database
 
   nats:
     image: nats:2.12.2-alpine
