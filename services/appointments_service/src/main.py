@@ -3,6 +3,7 @@ import logging
 from contextlib import asynccontextmanager
 
 from faststream import FastStream
+from faststream.asgi import AsgiFastStream, make_ping_asgi
 from faststream.nats import NatsBroker
 
 from src.config import settings
@@ -35,12 +36,22 @@ async def lifespan(app):
     _log.info(f"{settings.SERVICE_NAME} stopped.")
 
 
-app = FastStream(
-    broker,
-    title=settings.SERVICE_NAME,
-    version=settings.VERSION,
-    description=settings.SERVICE_DESCRIPTION,
-    lifespan=lifespan,
+app = AsgiFastStream(
+    FastStream(
+        broker,
+        title=settings.SERVICE_NAME,
+        version=settings.VERSION,
+        description=settings.SERVICE_DESCRIPTION,
+        lifespan=lifespan,
+    ),
+    asgi_routes=[
+        (
+            "/healthz",
+            make_ping_asgi(
+                broker, timeout=1.0, include_in_schema=False
+            ),
+        )
+    ],
 )
 
 register_handlers(broker)

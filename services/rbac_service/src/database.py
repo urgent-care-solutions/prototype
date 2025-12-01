@@ -1,14 +1,14 @@
 import logging
-from sqlalchemy import create_engine
+
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
+from src.config import settings
+
 _log = logging.getLogger("rich")
 
-DATABASE_URL = "sqlite+aiosqlite:///./rbac.db"
-
 engine = create_async_engine(
-    DATABASE_URL,
+    settings.DATABASE_URL,
     echo=False,
     future=True,
 )

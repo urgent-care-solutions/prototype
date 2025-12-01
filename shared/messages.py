@@ -89,11 +89,13 @@ class UserPasswordVerified(BaseMessage):
     is_active: bool = False
 
 
-class UserList(UserBase):
+class UserList(BaseMessage):
+    role_id: str | None = None
     is_active: bool | None = None
 
 
-class UserListed(UserList):
+class UserListed(BaseMessage):
+    users: list[UserReaded] = []
     success: bool = True
 
 
@@ -645,6 +647,7 @@ class AuditLog(BaseMessage):
         "billing",
         "notification",
         "auth",
+        "reports",
     ] = Field(...)
     resource_id: UUID4 | None = None
     service_name: str

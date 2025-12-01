@@ -1,4 +1,5 @@
 import logging
+import uuid
 
 from faststream.nats import NatsBroker
 
@@ -50,6 +51,7 @@ def register_handlers(broker: NatsBroker):
         except Exception as e:
             _log.error(f"Error creating patient: {e}")
             return PatientCreated(
+                id=uuid.uuid4(),
                 success=False,
                 first_name=msg.first_name,
                 last_name=msg.last_name,

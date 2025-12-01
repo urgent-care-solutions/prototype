@@ -32,5 +32,5 @@ class Patient(Base):
     )
 
     user_id = Column(
-        String(36), nullable=False, unique=True
+        String(36), nullable=True, unique=True
     )  # Associated user ID

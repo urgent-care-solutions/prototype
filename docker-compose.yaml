@@ -1,9 +1,11 @@
 services:
   gateway:
-    build: ./gateway
+    build:
+      context: .
+      dockerfile: ./gateway/Dockerfile
     container_name: api-gateway
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8000/healthz" ]
+      test: [ "CMD", "wget", "--spider", "-q", "http://localhost:8000/healthz" ]
       interval: 10s
       timeout: 10s
       retries: 5
@@ -18,18 +20,40 @@ services:
       - audit
 
   rbac:
-    build: ./services/rbac_service
+    build:
+      context: .
+      dockerfile: ./services/rbac_service/Dockerfile
     container_name: rbac-service
+    command: >
+      sh -c "touch /app/services/rbac_service/database/rbac.db &&
+             uv run alembic upgrade head &&
+             uv run faststream run src.main:app --host 0.0.0.0 --port 8080"
+    healthcheck:
+      test: [ "CMD", "wget", "--spider", "-q", "http://localhost:8080/healthz" ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
     networks:
       - phi
     depends_on:
       - nats
     volumes:
-      - ./services/rbac_service/database:/app/database
+      - rbac_data:/app/services/rbac_service/database
 
   auth:
-    build: ./services/auth_service
+    build:
+      context: .
+      dockerfile: ./services/auth_service/Dockerfile
     container_name: auth-service
+    healthcheck:
+      test: [ "CMD", "wget", "--spider", "-q", "http://localhost:8030/healthz" ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+    ports:
+      - 8030:8030
     networks:
       - phi
     depends_on:
@@ -37,20 +61,46 @@ services:
       - nats
 
   audit:
-    build: ./services/audit_service
+    build:
+      context: .
+      dockerfile: ./services/audit_service/Dockerfile
     container_name: audit-service
+    command: >
+      sh -c "touch /app/services/audit_service/database/audit.db &&
+             uv run alembic upgrade head &&
+             uv run faststream run src.main:app --host 0.0.0.0 --port 8020"
+    healthcheck:
+      test: [ "CMD", "wget", "--spider", "-q", "http://localhost:8020/healthz" ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+    ports:
+      - 8020:8020
     networks:
       - phi
     depends_on:
-      - rbac
-      - auth
       - nats
     volumes:
-      - ./services/audit_service/database:/app/database
+      - audit_data:/app/services/audit_service/database
 
   patients:
-    build: ./services/patients_service
+    build:
+      context: .
+      dockerfile: ./services/patient_service/Dockerfile
     container_name: patients-service
+    command: >
+      sh -c "touch /app/services/patient_service/database/patients.db &&
+             uv run alembic upgrade head &&
+             uv run faststream run src.main:app --host 0.0.0.0 --port 8100"
+    healthcheck:
+      test: [ "CMD", "wget", "--spider", "-q", "http://localhost:8100/healthz" ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+    ports:
+      - 8100:8100
     networks:
       - phi
     depends_on:
@@ -58,11 +108,25 @@ services:
       - auth
       - nats
     volumes:
-      - ./services/patients_service/database:/app/database
+      - patients_data:/app/services/patient_service/database
 
   appointments:
-    build: ./services/appointments_service
+    build:
+      context: .
+      dockerfile: ./services/appointments_service/Dockerfile
     container_name: appointments-service
+    command: >
+      sh -c "touch /app/services/appointments_service/database/appointments.db &&
+             uv run alembic upgrade head &&
+             uv run faststream run src.main:app --host 0.0.0.0 --port 8010"
+    healthcheck:
+      test: [ "CMD", "wget", "--spider", "-q", "http://localhost:8010/healthz" ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+    ports:
+      - 8010:8010
     networks:
       - phi
     depends_on:
@@ -70,11 +134,25 @@ services:
       - auth
       - nats
     volumes:
-      - ./services/appointments_service/database:/app/database
+      - appointments_data:/app/services/appointments_service/database
 
   ehr:
-    build: ./services/ehr_service
+    build:
+      context: .
+      dockerfile: ./services/ehr_service/Dockerfile
     container_name: ehr-service
+    command: >
+      sh -c "touch /app/services/ehr_service/database/ehr.db &&
+             uv run alembic upgrade head &&
+             uv run faststream run src.main:app --host 0.0.0.0 --port 8200"
+    healthcheck:
+      test: [ "CMD", "wget", "--spider", "-q", "http://localhost:8200/healthz" ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+    ports:
+      - 8200:8200
     networks:
       - phi
     depends_on:
@@ -82,11 +160,25 @@ services:
       - auth
       - nats
     volumes:
-      - ./services/ehr_service/database:/app/database
+      - ehr_data:/app/services/ehr_service/database
 
   billing:
-    build: ./services/integration_service
+    build:
+      context: .
+      dockerfile: ./services/integration_service/Dockerfile
     container_name: integration-service
+    command: >
+      sh -c "touch /app/services/integration_service/database/integration.db &&
+             uv run alembic upgrade head &&
+             uv run faststream run src.main:app --host 0.0.0.0 --port 8300"
+    healthcheck:
+      test: [ "CMD", "wget", "--spider", "-q", "http://localhost:8300/healthz" ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+    ports:
+      - 8300:8300
     networks:
       - phi
     depends_on:
@@ -94,11 +186,25 @@ services:
       - auth
       - nats
     volumes:
-      - ./services/integration_service/database:/app/database
+      - billing_data:/app/services/integration_service/database
 
   notification:
-    build: ./services/notification_service
+    build:
+      context: .
+      dockerfile: ./services/notification_service/Dockerfile
     container_name: notification-service
+    command: >
+      sh -c "touch /app/services/notification_service/database/notification.db &&
+             uv run alembic upgrade head &&
+             uv run faststream run src.main:app --host 0.0.0.0 --port 8400"
+    healthcheck:
+      test: [ "CMD", "wget", "--spider", "-q", "http://localhost:8400/healthz" ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+    ports:
+      - 8400:8400
     networks:
       - phi
     depends_on:
@@ -106,11 +212,25 @@ services:
       - auth
       - nats
     volumes:
-      - ./services/notification_service/database:/app/database
+      - notification_data:/app/services/notification_service/database
 
   reporting:
-    build: ./services/reporting_service
+    build:
+      context: .
+      dockerfile: ./services/reporting_service/Dockerfile
     container_name: reporting-service
+    command: >
+      sh -c "touch /app/services/reporting_service/database/reporting.db &&
+             uv run alembic upgrade head &&
+             uv run faststream run src.main:app --host 0.0.0.0 --port 8500"
+    healthcheck:
+      test: [ "CMD", "wget", "--spider", "-q", "http://localhost:8500/healthz" ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+    ports:
+      - 8500:8500
     networks:
       - phi
     depends_on:
@@ -118,7 +238,7 @@ services:
       - auth
       - nats
     volumes:
-      - ./services/reporting_service/database:/app/database
+      - reporting_data:/app/services/reporting_service/database
 
   nats:
     image: nats:2.12.2-alpine
@@ -161,6 +281,14 @@ services:
 
 volumes:
   nats_data:
+  ehr_data:
+  appointments_data:
+  patients_data:
+  audit_data:
+  billing_data:
+  notification_data:
+  reporting_data:
+  rbac_data:
 
 
 networks:

@@ -3,6 +3,7 @@ import logging
 from contextlib import asynccontextmanager
 
 from faststream import FastStream
+from faststream.asgi import AsgiFastStream, make_ping_asgi
 from faststream.nats import NatsBroker
 from shared.messages import (
     AuditLog,
@@ -44,12 +45,22 @@ async def lifespan(app):
     _log.info(f"{settings.SERVICE_NAME} stopped.")
 
 
-app = FastStream(
-    broker,
-    title=settings.SERVICE_NAME,
-    version=settings.VERSION,
-    description=settings.SERVICE_DESCRIPTION,
-    lifespan=lifespan,
+app = AsgiFastStream(
+    FastStream(
+        broker,
+        title=settings.SERVICE_NAME,
+        version=settings.VERSION,
+        description=settings.SERVICE_DESCRIPTION,
+        lifespan=lifespan,
+    ),
+    asgi_routes=[
+        (
+            "/healthz",
+            make_ping_asgi(
+                broker, timeout=1.0, include_in_schema=False
+            ),
+        )
+    ],
 )
 
 
@@ -69,14 +80,20 @@ async def handle_login(msg: AuthLoginRequest) -> AuthLoginResponse:
         )
     except TimeoutError:
         _log.error("RBAC service timeout during login")
-        return AuthLoginResponse(success=False, error="Authentication service timeout")
+        return AuthLoginResponse(
+            success=False, error="Authentication service timeout"
+        )
     except Exception as e:
         _log.error(f"Error communicating with RBAC: {e}")
-        return AuthLoginResponse(success=False, error="Internal login error")
+        return AuthLoginResponse(
+            success=False, error="Internal login error"
+        )
 
     # 2. Check verification result
     if not rbac_response.success or not rbac_response.is_active:
-        _log.warning(f"Failed login for {msg.email}: Invalid credentials or inactive account")
+        _log.warning(
+            f"Failed login for {msg.email}: Invalid credentials or inactive account"
+        )
 
         # Log audit failure
         await broker.publish(
@@ -88,7 +105,9 @@ async def handle_login(msg: AuthLoginRequest) -> AuthLoginResponse:
             ),
             "audit.log.auth",
         )
-        return AuthLoginResponse(success=False, error="Invalid credentials")
+        return AuthLoginResponse(
+            success=False, error="Invalid credentials"
+        )
 
     # 3. Create Session
     token = await session_manager.create_session(rbac_response)
@@ -105,7 +124,12 @@ async def handle_login(msg: AuthLoginRequest) -> AuthLoginResponse:
         "audit.log.auth",
     )
 
-    return AuthLoginResponse(success=True, token=token, user_id=rbac_response.user_id, role_id=rbac_response.role_id)
+    return AuthLoginResponse(
+        success=True,
+        token=token,
+        user_id=rbac_response.user_id,
+        role_id=rbac_response.role_id,
+    )
 
 
 @broker.subscriber("auth.verify")

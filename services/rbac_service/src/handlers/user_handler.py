@@ -50,7 +50,12 @@ async def handle_user_create(msg: UserCreate) -> UserCreated:
         return UserCreated(success=False)
     else:
         _log.info(f"Created user: {user.id}")
-        return UserCreated(success=True)
+        return UserCreated(
+            success=True,
+            user_id=user.id,
+            email=user.email,
+            role_id=user.role_id,
+        )
 
 
 @broker.subscriber("user.update")
@@ -77,7 +82,12 @@ async def handle_user_update(msg: UserUpdate) -> UserUpdated:
         return UserUpdated(success=False)
     else:
         _log.info(f"Updated user: {msg.user_id}")
-        return UserUpdated(success=True)
+        return UserUpdated(
+            success=True,
+            user_id=user.id,
+            email=user.email,
+            role_id=user.role_id,
+        )
 
 
 @broker.subscriber("user.read")
@@ -115,7 +125,9 @@ async def handle_user_get(msg: UserRead) -> UserReaded:
 async def handle_user_list(msg: UserList) -> UserListed:
     try:
         users = (
-            await UserService.list_users(role_id=msg.role_id, is_active=msg.is_active)
+            await UserService.list_users(
+                role_id=msg.role_id, is_active=msg.is_active
+            )
             if msg.role_id or msg.is_active is not None
             else await UserService.list_users()
         )
@@ -133,12 +145,21 @@ async def handle_user_list(msg: UserList) -> UserListed:
                 ),
                 subject="audit.log.user",
             )
+        user_list_data = [
+            UserReaded(
+                user_id=u.id,
+                email=u.email,
+                role_id=u.role_id,
+                success=True,
+            )
+            for u in users
+        ]
     except Exception as e:
         _log.error(f"Error updating user: {e!s}")
-        return UserListed(success=False)
+        return UserListed(success=False, users=[])
     else:
         _log.info(f"Updated user: {msg.user_id}")
-        return UserListed(success=True)
+        return UserListed(success=True, users=user_list_data)
 
 
 @broker.subscriber("user.password.verify")
@@ -148,7 +169,9 @@ async def handle_user_password_verify(
     msg: UserPasswordVerify,
 ) -> UserPasswordVerified:
     try:
-        user = await UserService.verify_user_password(msg.email, msg.password)
+        user = await UserService.verify_user_password(
+            msg.email, msg.password
+        )
         await broker.publish(
             AuditLog(
                 user_id=msg.user_id,
@@ -167,7 +190,13 @@ async def handle_user_password_verify(
         return UserPasswordVerified(success=False)
     else:
         _log.info(f"Updated user: {msg.user_id}")
-        return UserPasswordVerified(success=True)
+        return UserPasswordVerified(
+            success=True,
+            user_id=user.id,
+            role_id=user.role_id,
+            email=user.email,
+            is_active=user.is_active,
+        )
 
 
 @broker.subscriber("user.delete")

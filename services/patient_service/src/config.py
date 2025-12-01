@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     )
     VERSION: str
     NATS_CONNECTION_STR: str = "nats://localhost:4222"
-    DATABASE_URL: str = "sqlite+aiosqlite:///./src/database/patients.db"
+    DATABASE_URL: str = "sqlite+aiosqlite:///./database/patients.db"
     LOGGER: str = "rich"
 
     model_config = SettingsConfigDict(

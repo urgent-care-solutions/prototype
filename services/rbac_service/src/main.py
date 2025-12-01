@@ -3,6 +3,7 @@ import logging
 from contextlib import asynccontextmanager
 
 from faststream import FastStream
+from faststream.asgi import AsgiFastStream, make_ping_asgi
 
 import src.handlers.clinic_handler  # noqa: F401
 import src.handlers.department_handler  # noqa: F401
@@ -50,12 +51,22 @@ async def main() -> None:
     # We run it using the built-in run functionality or via CLI.
     # Since the Dockerfile calls `uv run main.py`, we run it here.
 
-    app = FastStream(
-        broker,
-        title=settings.SERVICE_NAME,
-        version=settings.VERSION,
-        description=settings.SERVICE_DESCRIPTION,
-        lifespan=lifespan,
+    app = AsgiFastStream(
+        FastStream(
+            broker,
+            title=settings.SERVICE_NAME,
+            version=settings.VERSION,
+            description=settings.SERVICE_DESCRIPTION,
+            lifespan=lifespan,
+        ),
+        asgi_routes=[
+            (
+                "/healthz",
+                make_ping_asgi(
+                    broker, timeout=1.0, include_in_schema=False
+                ),
+            )
+        ],
     )
 
     await app.run()

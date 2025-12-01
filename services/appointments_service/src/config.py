@@ -13,9 +13,7 @@ class Settings(BaseSettings):
     )
     VERSION: str
     NATS_CONNECTION_STR: str = "nats://localhost:4222"
-    DATABASE_URL: str = (
-        "sqlite+aiosqlite:///./src/database/appointments.db"
-    )
+    DATABASE_URL: str = "sqlite+aiosqlite:///./database/appointments.db"
     LOGGER: str = "rich"
 
     # Durations in minutes

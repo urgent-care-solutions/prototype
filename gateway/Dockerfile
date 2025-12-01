@@ -2,9 +2,12 @@ FROM ghcr.io/astral-sh/uv:alpine3.22
 
 WORKDIR /app
 
-COPY . .
+COPY shared /app/shared
+COPY gateway /app/gateway
 
-RUN uv sync --no-dev && \
+WORKDIR /app/gateway
+
+RUN uv sync --frozen --no-dev && \
     addgroup -g 1001 -S app && \
     adduser -u 1001 -S app -G app && \
     chown -R app:app /app

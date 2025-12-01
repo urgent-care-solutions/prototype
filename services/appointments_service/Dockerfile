@@ -3,9 +3,9 @@ FROM ghcr.io/astral-sh/uv:alpine3.22
 WORKDIR /app
 
 COPY shared /app/shared
-COPY services/auth_service /app/services/auth_service
+COPY services/appointments_service /app/services/appointments_service
 
-WORKDIR /app/services/auth_service
+WORKDIR /app/services/appointments_service
 
 RUN uv sync --frozen --no-dev && \
     addgroup -g 1001 -S app && \
@@ -14,4 +14,4 @@ RUN uv sync --frozen --no-dev && \
 
 USER app
 
-CMD [ "uv", "run", "faststream", "run", "src::main:app", "--host", "0.0.0.0", "--port", "8030" ]
+CMD [ "uv", "run", "faststream", "run", "src::main:app", "--host", "0.0.0.0", "--port", "8010" ]
