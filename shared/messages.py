@@ -645,6 +645,7 @@ class AuditLog(BaseMessage):
         "billing",
         "notification",
         "auth",
+        "report",
     ] = Field(...)
     resource_id: UUID4 | None = None
     service_name: str

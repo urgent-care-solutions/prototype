@@ -72,8 +72,6 @@ services:
     networks:
       - phi
     depends_on:
-      - rbac
-      - auth
       - nats
     volumes:
       - ./services/audit_service/database:/app/database
