@@ -5,7 +5,7 @@ services:
       dockerfile: ./gateway/Dockerfile
     container_name: api-gateway
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8000/healthz" ]
+      test: [ "CMD", "wget", "--spider", "-q", "http://localhost:8000/healthz" ]
       interval: 10s
       timeout: 10s
       retries: 5
@@ -24,6 +24,12 @@ services:
       context: .
       dockerfile: ./services/rbac_service/Dockerfile
     container_name: rbac-service
+    healthcheck:
+      test: [ "CMD", "wget", "--spider", "-q", "http://localhost:8080/healthz" ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
     networks:
       - phi
     depends_on:
@@ -36,6 +42,14 @@ services:
       context: .
       dockerfile: ./services/auth_service/Dockerfile
     container_name: auth-service
+    healthcheck:
+      test: [ "CMD", "wget", "--spider", "-q", "http://localhost:8030/healthz" ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+    ports:
+      - 8030:8030
     networks:
       - phi
     depends_on:
@@ -47,6 +61,14 @@ services:
       context: .
       dockerfile: ./services/audit_service/Dockerfile
     container_name: audit-service
+    healthcheck:
+      test: [ "CMD", "wget", "--spider", "-q", "http://localhost:8020/healthz" ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+    ports:
+      - 8020:8020
     networks:
       - phi
     depends_on:
@@ -61,6 +83,14 @@ services:
       context: .
       dockerfile: ./services/patient_service/Dockerfile
     container_name: patients-service
+    healthcheck:
+      test: [ "CMD", "wget", "--spider", "-q", "http://localhost:8100/healthz" ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+    ports:
+      - 8100:8100
     networks:
       - phi
     depends_on:
@@ -75,6 +105,14 @@ services:
       context: .
       dockerfile: ./services/appointments_service/Dockerfile
     container_name: appointments-service
+    healthcheck:
+      test: [ "CMD", "wget", "--spider", "-q", "http://localhost:8010/healthz" ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+    ports:
+      - 8010:8010
     networks:
       - phi
     depends_on:
@@ -89,6 +127,14 @@ services:
       context: .
       dockerfile: ./services/ehr_service/Dockerfile
     container_name: ehr-service
+    healthcheck:
+      test: [ "CMD", "wget", "--spider", "-q", "http://localhost:8200/healthz" ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+    ports:
+      - 8200:8200
     networks:
       - phi
     depends_on:
@@ -103,6 +149,14 @@ services:
       context: .
       dockerfile: ./services/integration_service/Dockerfile
     container_name: integration-service
+    healthcheck:
+      test: [ "CMD", "wget", "--spider", "-q", "http://localhost:8300/healthz" ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+    ports:
+      - 8300:8300
     networks:
       - phi
     depends_on:
@@ -117,6 +171,14 @@ services:
       context: .
       dockerfile: ./services/notification_service/Dockerfile
     container_name: notification-service
+    healthcheck:
+      test: [ "CMD", "wget", "--spider", "-q", "http://localhost:8400/healthz" ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+    ports:
+      - 8400:8400
     networks:
       - phi
     depends_on:
@@ -131,6 +193,14 @@ services:
       context: .
       dockerfile: ./services/reporting_service/Dockerfile
     container_name: reporting-service
+    healthcheck:
+      test: [ "CMD", "wget", "--spider", "-q", "http://localhost:8500/healthz" ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+    ports:
+      - 8500:8500
     networks:
       - phi
     depends_on:

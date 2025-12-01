@@ -14,4 +14,4 @@ RUN uv sync --frozen --no-dev && \
 
 USER app
 
-CMD [ "uv", "run", "src/main.py" ]
+CMD [ "uv", "run", "faststream", "run", "src::main:app", "--host", "0.0.0.0", "--port", "8010" ]

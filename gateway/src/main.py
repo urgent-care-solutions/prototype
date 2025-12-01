@@ -1,7 +1,7 @@
 import logging
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Response, status
 from strawberry.fastapi import GraphQLRouter
 
 from src.config import settings
@@ -52,8 +52,21 @@ app.include_router(graphql_app, prefix="/graphql")
 
 
 @app.get("/healthz")
-async def health_check():
-    return {"status": "ok", "service": settings.SERVICE_NAME}
+async def health_check(response: Response):
+    is_connected = await nats_client.broker.ping(timeout=1.0)
+    if is_connected:
+        return {
+            "status": "ok",
+            "service": settings.SERVICE_NAME,
+            "nats": "connected",
+        }
+
+    response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
+    return {
+        "status": "unhealthy",
+        "service": settings.SERVICE_NAME,
+        "nats": "disconnected",
+    }
 
 
 if __name__ == "__main__":

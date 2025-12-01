@@ -180,12 +180,13 @@ def generate_service(service_name: str):
     FROM {DOCKER_IMAGE}
 
     WORKDIR /app
-    COPY . .
-    
-    # Ensure database dir exists
-    RUN mkdir -p database
 
-    RUN uv sync --no-dev && \\
+    COPY shared /app/shared
+    COPY services/{folder_name} /app/services/{folder_name}
+
+    WORKDIR /app/services/{folder_name}
+
+    RUN uv sync --frozen --no-dev && \\
         addgroup -g 1001 -S app && \\
         adduser -u 1001 -S app -G app && \\
         chown -R app:app /app
