@@ -77,8 +77,8 @@ async def handle_role_update(msg: RoleUpdate) -> RoleUpdated:
         return RoleUpdated(success=True)
 
 
-@broker.subscriber("role.update")
-@broker.publisher("role.updated")
+@broker.subscriber("role.delete")
+@broker.publisher("role.deleted")
 @broker.publisher("audit.log.role")
 async def handle_role_delete(msg: RoleDelete) -> RoleDeleted:
     _log.debug(f"Handling role update for role: {msg.role_name}")
