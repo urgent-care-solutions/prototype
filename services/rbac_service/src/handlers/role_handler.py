@@ -6,6 +6,9 @@ from shared.messages import (
     RoleCreated,
     RoleDelete,
     RoleDeleted,
+    RoleList,
+    RoleListed,
+    RoleReaded,
     RoleUpdate,
     RoleUpdated,
 )
@@ -105,3 +108,24 @@ async def handle_role_delete(msg: RoleDelete) -> RoleDeleted:
     else:
         _log.info(f"Updated role: {role.id}")
         return RoleDeleted(success=True)
+
+
+@broker.subscriber("role.list")
+@broker.publisher("role.listed")
+async def handle_role_list(msg: RoleList) -> RoleListed:
+    _log.debug("Handling role list request")
+    try:
+        roles = await RoleService.list_roles(is_active=msg.is_active)
+        roles_readed = [
+            RoleReaded(
+                id=r.id,
+                name=r.name,
+                permissions=r.permissions,
+                success=True,
+            )
+            for r in roles
+        ]
+        return RoleListed(roles=roles_readed, success=True)
+    except Exception as e:
+        _log.error(f"Error listing roles: {e}")
+        return RoleListed(roles=[], success=False)

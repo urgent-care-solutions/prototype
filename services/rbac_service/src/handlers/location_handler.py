@@ -21,7 +21,9 @@ _log = logging.getLogger(settings.LOGGER)
 @broker.subscriber("location.create")
 @broker.publisher("location.created")
 @broker.publisher("audit.log.location")
-async def handle_location_create(msg: LocationCreate) -> LocationCreated:
+async def handle_location_create(
+    msg: LocationCreate,
+) -> LocationCreated:
     _log.info(f"Creating location for clinic: {msg.clinic_id}")
     loc = await LocationService.create_location(msg)
     return LocationCreated.model_validate(loc)
@@ -33,7 +35,9 @@ async def handle_location_create(msg: LocationCreate) -> LocationCreated:
 async def handle_location_read(msg: LocationRead) -> LocationReaded:
     # LocationRead has 'id' or 'location_id' depending on exact definition,
     # assuming 'id' based on other messages or standard patterns.
-    loc_id = getattr(msg, "id", None) or getattr(msg, "location_id", None)
+    loc_id = getattr(msg, "id", None) or getattr(
+        msg, "location_id", None
+    )
 
     if not loc_id:
         # Fallback: check if message has only one UUID field
@@ -50,7 +54,9 @@ async def handle_location_read(msg: LocationRead) -> LocationReaded:
 @broker.subscriber("location.update")
 @broker.publisher("location.updated")
 @broker.publisher("audit.log.location")
-async def handle_location_update(msg: LocationUpdate) -> LocationUpdated:
+async def handle_location_update(
+    msg: LocationUpdate,
+) -> LocationUpdated:
     # LocationUpdate explicitly has 'id: UUID4' in messages.py
     _log.info(f"Updating location: {msg.id}")
     loc = await LocationService.update_location(msg.id, msg)
@@ -60,9 +66,13 @@ async def handle_location_update(msg: LocationUpdate) -> LocationUpdated:
 @broker.subscriber("location.delete")
 @broker.publisher("location.deleted")
 @broker.publisher("audit.log.location")
-async def handle_location_delete(msg: LocationDelete) -> LocationDeleted:
+async def handle_location_delete(
+    msg: LocationDelete,
+) -> LocationDeleted:
     # LocationDelete is a BaseMessage, assumes ID is available
-    loc_id = getattr(msg, "id", None) or getattr(msg, "location_id", None)
+    loc_id = getattr(msg, "id", None) or getattr(
+        msg, "location_id", None
+    )
 
     if not loc_id:
         raise ValueError("Location ID required for delete")

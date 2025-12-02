@@ -22,22 +22,30 @@ class DepartmentService:
     async def get_department(dep_id: UUID) -> Department | None:
         session = await DepartmentService.get_session()
         async with session:
-            query = select(Department).where(Department.id == str(dep_id))
+            query = select(Department).where(
+                Department.id == str(dep_id)
+            )
             result = await session.execute(query)
             return result.scalars().first()
 
     @staticmethod
-    async def list_departments(location_id: UUID = None) -> list[Department]:
+    async def list_departments(
+        location_id: UUID = None,
+    ) -> list[Department]:
         session = await DepartmentService.get_session()
         async with session:
             query = select(Department)
             if location_id:
-                query = query.where(Department.location_id == str(location_id))
+                query = query.where(
+                    Department.location_id == str(location_id)
+                )
             result = await session.execute(query)
             return result.scalars().all()
 
     @staticmethod
-    async def create_department(dep_data: DepartmentCreate) -> Department:
+    async def create_department(
+        dep_data: DepartmentCreate,
+    ) -> Department:
         session = await DepartmentService.get_session()
         async with session:
             db_dep = Department(
@@ -48,21 +56,29 @@ class DepartmentService:
                 wing=dep_data.wing,
                 phone=dep_data.phone,
                 email=dep_data.email,
-                manager_id=str(dep_data.manager_id) if dep_data.manager_id else None,
+                manager_id=str(dep_data.manager_id)
+                if dep_data.manager_id
+                else None,
                 is_active=dep_data.is_active,
                 operating_hours=dep_data.operating_hours,
             )
             session.add(db_dep)
             await session.commit()
             await session.refresh(db_dep)
-            _log.info(f"Created department: {db_dep.id} in location {db_dep.location_id}")
+            _log.info(
+                f"Created department: {db_dep.id} in location {db_dep.location_id}"
+            )
             return db_dep
 
     @staticmethod
-    async def update_department(dep_id: UUID, dep_data: DepartmentUpdate) -> Department:
+    async def update_department(
+        dep_id: UUID, dep_data: DepartmentUpdate
+    ) -> Department:
         session = await DepartmentService.get_session()
         async with session:
-            query = select(Department).where(Department.id == str(dep_id))
+            query = select(Department).where(
+                Department.id == str(dep_id)
+            )
             result = await session.execute(query)
             db_dep = result.scalars().first()
 
@@ -96,7 +112,9 @@ class DepartmentService:
     async def delete_department(dep_id: UUID) -> Department:
         session = await DepartmentService.get_session()
         async with session:
-            query = select(Department).where(Department.id == str(dep_id))
+            query = select(Department).where(
+                Department.id == str(dep_id)
+            )
             result = await session.execute(query)
             db_dep = result.scalars().first()
 

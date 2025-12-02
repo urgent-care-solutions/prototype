@@ -2,19 +2,16 @@ FROM ghcr.io/astral-sh/uv:alpine3.22
 
 WORKDIR /app
 
-COPY . /app
+COPY shared /app/shared
+COPY seeder /app/seeder
 
-RUN uv venv && \
-    source .venv/bin/activate && \
-    uv pip install \
-    faker \
-    passlib \
-    bcrypt \
-    sqlalchemy \
-    aiosqlite \
-    pydantic \
-    pydantic-settings
+WORKDIR /app/seeder
 
-ENV PYTHONPATH=/app
+RUN uv sync --frozen --no-dev && \
+    addgroup -g 1001 -S app && \
+    adduser -u 1001 -S app -G app && \
+    chown -R app:app /app
 
-CMD ["uv", "run", "seeder/seed.py"]
+USER app
+
+CMD ["uv", "run", "seed.py"]
