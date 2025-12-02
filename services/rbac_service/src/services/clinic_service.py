@@ -52,7 +52,9 @@ class ClinicService:
             return db_clinic
 
     @staticmethod
-    async def update_clinic(clinic_id: UUID, clinic_data: ClinicUpdate) -> Clinic:
+    async def update_clinic(
+        clinic_id: UUID, clinic_data: ClinicUpdate
+    ) -> Clinic:
         session = await ClinicService.get_session()
         async with session:
             query = select(Clinic).where(Clinic.id == str(clinic_id))

@@ -258,15 +258,6 @@ services:
     restart: no
     environment:
       - SEED_DATA=${SEED_DATA:-false}
-    volumes:
-      - rbac_data:/data/rbac
-      - patients_data:/data/patients
-      - appointments_data:/data/appointments
-      - ehr_data:/data/ehr
-      - billing_data:/data/billing
-      - notification_data:/data/notification
-      - reporting_data:/data/reporting
-      - audit_data:/data/audit
     depends_on:
       rbac:
         condition: service_healthy

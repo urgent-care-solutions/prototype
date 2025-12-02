@@ -18,9 +18,7 @@ class BaseMessage(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     message_id: UUID4 = Field(default_factory=uuid.uuid4)
-    timestamp: datetime = Field(
-        default_factory=lambda: datetime.now(tz=UTC)
-    )
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(tz=UTC))
     user_id: UUID4 | None = None
     request_id: UUID4 | None = None
 
@@ -52,6 +50,15 @@ class RoleUpdate(BaseRole):
 
 
 class RoleUpdated(RoleUpdate):
+    success: bool = True
+
+
+class RoleList(BaseMessage):
+    is_active: bool | None = None
+
+
+class RoleListed(BaseMessage):
+    roles: list[RoleReaded] = []
     success: bool = True
 
 
@@ -367,9 +374,7 @@ class AppointmentType(BaseModel):
 
 class ScheduleBase(BaseMessage):
     provider_id: UUID4
-    day_of_week: int = Field(
-        ..., ge=0, le=6, description="0=Monday, 6=Sunday"
-    )
+    day_of_week: int = Field(..., ge=0, le=6, description="0=Monday, 6=Sunday")
     start_time: time
     end_time: time
     is_active: bool = True
@@ -415,9 +420,7 @@ class AppointmentBase(BaseMessage):
     start_time: datetime
     appointment_type: Literal["initial", "follow_up", "telemedicine"]
     reason: str | None = None
-    status: Literal["scheduled", "canceled", "completed", "no_show"] = (
-        "scheduled"
-    )
+    status: Literal["scheduled", "canceled", "completed", "no_show"] = "scheduled"
 
 
 class AppointmentCreate(BaseMessage):
@@ -549,9 +552,7 @@ class TransactionBase(BaseMessage):
     patient_id: UUID4
     amount: float
     currency: str = "USD"
-    status: Literal["pending", "success", "failed", "refunded"] = (
-        "pending"
-    )
+    status: Literal["pending", "success", "failed", "refunded"] = "pending"
     description: str | None = None
 
 
