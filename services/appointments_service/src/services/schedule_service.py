@@ -23,8 +23,7 @@ class ScheduleService:
             # Check for overlapping schedules for same provider/day
             stmt = select(ProviderSchedule).where(
                 and_(
-                    ProviderSchedule.provider_id
-                    == str(data.provider_id),
+                    ProviderSchedule.provider_id == str(data.provider_id),
                     ProviderSchedule.day_of_week == data.day_of_week,
                     ProviderSchedule.is_active == True,  # noqa: E712
                 )
@@ -32,13 +31,8 @@ class ScheduleService:
             existing = await session.execute(stmt)
             for sch in existing.scalars():
                 # Simple overlap check: if new start < old end and new end > old start
-                if (
-                    data.start_time < sch.end_time
-                    and data.end_time > sch.start_time
-                ):
-                    raise ValueError(
-                        "Schedule overlaps with existing rule"
-                    )
+                if data.start_time < sch.end_time and data.end_time > sch.start_time:
+                    raise ValueError("Schedule overlaps with existing rule")
 
             schedule = ProviderSchedule(
                 provider_id=str(data.provider_id),
@@ -69,8 +63,7 @@ class ScheduleService:
             # 1. Get Schedule
             stmt = select(ProviderSchedule).where(
                 and_(
-                    ProviderSchedule.provider_id
-                    == str(req.provider_id),
+                    ProviderSchedule.provider_id == str(req.provider_id),
                     ProviderSchedule.day_of_week == target_dow,
                     ProviderSchedule.is_active == True,  # noqa: E712
                 )
@@ -102,9 +95,7 @@ class ScheduleService:
             slot_duration = timedelta(minutes=30)
 
             for schedule in schedules:
-                current_time = datetime.combine(
-                    req.date, schedule.start_time
-                )
+                current_time = datetime.combine(req.date, schedule.start_time)
                 end_time = datetime.combine(req.date, schedule.end_time)
 
                 while current_time + slot_duration <= end_time:
@@ -114,10 +105,7 @@ class ScheduleService:
                     is_booked = False
                     for apt in appointments:
                         # If overlap
-                        if (
-                            current_time < apt.end_time
-                            and slot_end > apt.start_time
-                        ):
+                        if current_time < apt.end_time and slot_end > apt.start_time:
                             is_booked = True
                             break
 

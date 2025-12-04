@@ -16,9 +16,7 @@ Base = declarative_base()
 class Transaction(Base):
     __tablename__ = "transactions"
 
-    id = Column(
-        String(36), primary_key=True, default=lambda: str(uuid.uuid4())
-    )
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     patient_id = Column(String(36), nullable=False)
     appointment_id = Column(String(36), nullable=True)
 

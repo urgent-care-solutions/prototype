@@ -13,10 +13,15 @@ _log = logging.getLogger(settings.LOGGER)
 class SessionManager:
     def __init__(self):
         self.redis = redis.Redis(
-            host=settings.REDIS_HOST, port=settings.REDIS_PORT, password=settings.REDIS_PASSWORD, decode_responses=True
+            host=settings.REDIS_HOST,
+            port=settings.REDIS_PORT,
+            password=settings.REDIS_PASSWORD,
+            decode_responses=True,
         )
 
-    async def create_session(self, user_data: UserPasswordVerified) -> str:
+    async def create_session(
+        self, user_data: UserPasswordVerified
+    ) -> str:
         """Generates a token and stores user session in Redis."""
         token = str(uuid.uuid4())
         key = f"session:{token}"
@@ -29,7 +34,11 @@ class SessionManager:
         }
 
         try:
-            await self.redis.set(key, json.dumps(session_data), ex=settings.SESSION_TTL_SECONDS)
+            await self.redis.set(
+                key,
+                json.dumps(session_data),
+                ex=settings.SESSION_TTL_SECONDS,
+            )
             _log.debug(f"Session created for user {user_data.email}")
             return token
         except Exception as e:
@@ -43,7 +52,9 @@ class SessionManager:
             data = await self.redis.get(key)
             if data:
                 # Refresh TTL on activity
-                await self.redis.expire(key, settings.SESSION_TTL_SECONDS)
+                await self.redis.expire(
+                    key, settings.SESSION_TTL_SECONDS
+                )
                 return json.loads(data)
             return None
         except Exception as e:

@@ -43,9 +43,7 @@ app = AsgiFastStream(
     asgi_routes=[
         (
             "/healthz",
-            make_ping_asgi(
-                broker, timeout=1.0, include_in_schema=False
-            ),
+            make_ping_asgi(broker, timeout=1.0, include_in_schema=False),
         )
     ],
 )

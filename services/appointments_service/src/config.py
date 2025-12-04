@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     )
     VERSION: str
     NATS_CONNECTION_STR: str = "nats://localhost:4222"
-    DATABASE_URL: str = "sqlite+aiosqlite:///./database/appointments.db"
+    DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/phi_appointments"
     LOGGER: str = "rich"
 
     # Durations in minutes

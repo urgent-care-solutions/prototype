@@ -8,7 +8,9 @@ THIS_DIR = Path(__file__).parent
 
 class Settings(BaseSettings):
     SERVICE_NAME: str
-    SERVICE_DESCRIPTION: str = "Handles User Authentication and Session Management"
+    SERVICE_DESCRIPTION: str = (
+        "Handles User Authentication and Session Management"
+    )
     VERSION: str
 
     # NATS

@@ -51,9 +51,7 @@ async def get_context(request: Request) -> Dict[str, Any]:
                     RoleReaded,
                 )
 
-                permissions = (
-                    role_res.permissions if role_res.success else {}
-                )
+                permissions = role_res.permissions if role_res.success else {}
 
                 user_ctx = UserContext(
                     user_id=str(auth_res.user_id),
@@ -75,9 +73,7 @@ def require_permission(resource: str, action: str):
 
     def decorator(func):
         async def wrapper(*args, **kwargs):
-            info = next(
-                (arg for arg in args if isinstance(arg, Info)), None
-            )
+            info = next((arg for arg in args if isinstance(arg, Info)), None)
             if not info:
                 # Handle case where info might be in kwargs
                 info = kwargs.get("info")

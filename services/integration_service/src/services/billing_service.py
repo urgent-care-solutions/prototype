@@ -42,9 +42,7 @@ class BillingService:
                     "Mock Gateway: Insufficient Funds or Network Error"
                 )
                 await session.commit()
-                _log.warning(
-                    f"Charge failed for transaction {transaction.id}"
-                )
+                _log.warning(f"Charge failed for transaction {transaction.id}")
                 raise ValueError(transaction.error_message)
 
             # 4. Success
@@ -59,32 +57,21 @@ class BillingService:
     async def process_refund(data: RefundCreate) -> Transaction:
         async with AsyncSessionLocal() as session:
             # 1. Check Original Transaction
-            stmt = select(Transaction).where(
-                Transaction.id == str(data.transaction_id)
-            )
+            stmt = select(Transaction).where(Transaction.id == str(data.transaction_id))
             result = await session.execute(stmt)
             original = result.scalars().first()
 
             if not original:
                 raise ValueError("Original transaction not found")
 
-            if (
-                original.type != "CHARGE"
-                or original.status != "success"
-            ):
-                raise ValueError(
-                    "Cannot refund a failed transaction or another refund"
-                )
+            if original.type != "CHARGE" or original.status != "success":
+                raise ValueError("Cannot refund a failed transaction or another refund")
 
             # Default to full refund if amount not specified
-            refund_amount = (
-                data.amount if data.amount else original.amount
-            )
+            refund_amount = data.amount if data.amount else original.amount
 
             if refund_amount > original.amount:
-                raise ValueError(
-                    "Refund amount cannot exceed original charge"
-                )
+                raise ValueError("Refund amount cannot exceed original charge")
 
             # 2. Create Refund Transaction
             refund_tx = Transaction(
@@ -108,7 +95,5 @@ class BillingService:
             await session.commit()
             await session.refresh(refund_tx)
 
-            _log.info(
-                f"Refund successful: {refund_tx.id} referencing {original.id}"
-            )
+            _log.info(f"Refund successful: {refund_tx.id} referencing {original.id}")
             return refund_tx

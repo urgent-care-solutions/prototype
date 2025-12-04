@@ -7,23 +7,31 @@ from alembic import context
 from sqlalchemy import pool
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
-# Add the service root directory to sys.path so we can import src.models
-# File is at: services/ehr_service/src/database/migrations/env.py
-# parents[0]=migrations, [1]=database, [2]=src, [3]=ehr_service
-sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
+# ------------------------------------------------------------------------
+# 1. Add src path so we can import config and models
+# ------------------------------------------------------------------------
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from src.config import settings
 from src.models import Base
 
+# ------------------------------------------------------------------------
+# 2. Config setup
+# ------------------------------------------------------------------------
 config = context.config
 
-# Overwrite the alembic.ini sqlalchemy.url with the one from settings (which uses aiosqlite)
+# Overwrite the sqlalchemy.url in the alembic.ini with the one from our Settings
+# This ensures we use the Postgres URL from environment variables/config
 config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
 target_metadata = Base.metadata
+
+# ------------------------------------------------------------------------
+# 3. Async Migration Logic
+# ------------------------------------------------------------------------
 
 
 def run_migrations_offline() -> None:
@@ -36,7 +44,6 @@ def run_migrations_offline() -> None:
 
     Calls to context.execute() here emit the given string to the
     script output.
-
     """
     url = config.get_main_option("sqlalchemy.url")
     context.configure(
@@ -44,7 +51,15 @@ def run_migrations_offline() -> None:
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
-        render_as_batch=True,
+    )
+
+    with context.begin_transaction():
+        context.run_migrations()
+
+
+def do_run_migrations(connection):
+    context.configure(
+        connection=connection, target_metadata=target_metadata
     )
 
     with context.begin_transaction():
@@ -54,7 +69,6 @@ def run_migrations_offline() -> None:
 async def run_async_migrations() -> None:
     """In this scenario we need to create an Engine
     and associate a connection with the context.
-
     """
     connectable = async_engine_from_config(
         config.get_section(config.config_ini_section, {}),
@@ -66,15 +80,6 @@ async def run_async_migrations() -> None:
         await connection.run_sync(do_run_migrations)
 
     await connectable.dispose()
-
-
-def do_run_migrations(connection):
-    context.configure(
-        connection=connection, target_metadata=target_metadata
-    )
-
-    with context.begin_transaction():
-        context.run_migrations()
 
 
 def run_migrations_online() -> None:

@@ -49,9 +49,7 @@ def generate_service(service_name: str):
 
     # 1. Initialize uv project
     service_path.mkdir(parents=True)
-    run_cmd(
-        ["uv", "init", "--python", PYTHON_VERSION], cwd=service_path
-    )
+    run_cmd(["uv", "init", "--python", PYTHON_VERSION], cwd=service_path)
 
     # 2. Add Dependencies
     print("📦 Installing dependencies...")
@@ -78,9 +76,7 @@ def generate_service(service_name: str):
 
     # Link Shared Library
     # Note: relative path from services/my_service to shared/
-    run_cmd(
-        ["uv", "add", "--editable", "../../shared"], cwd=service_path
-    )
+    run_cmd(["uv", "add", "--editable", "../../shared"], cwd=service_path)
 
     # 3. Create File Structure
 
@@ -208,9 +204,7 @@ def generate_service(service_name: str):
     (service_path / "main.py").unlink(missing_ok=True)
 
     # Create DB/Migrations folder structure
-    (service_path / "database/migrations").mkdir(
-        parents=True, exist_ok=True
-    )
+    (service_path / "database/migrations").mkdir(parents=True, exist_ok=True)
 
     # Generate Alembic Configs (Optional but helpful)
     # generate_alembic_config(service_path, short_name)
@@ -327,31 +321,23 @@ def print_next_steps(folder_name: str, short_name: str):
 
     print(f"\n✅ {folder_name} created successfully!")
     print("\n--- NEXT STEPS ---")
-    print(
-        "1. Add the following to your 'docker-compose.yaml' under 'services:':"
-    )
+    print("1. Add the following to your 'docker-compose.yaml' under 'services:':")
     print(docker_snippet)
     print(f"2. cd services/{folder_name}")
     print("3. Create your models in 'src/models.py'")
-    print(
-        "4. Update 'database/migrations/env.py' to import your real Base model."
-    )
+    print("4. Update 'database/migrations/env.py' to import your real Base model.")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Scaffold a new microservice using uv."
     )
-    parser.add_argument(
-        "name", help="Name of the service (e.g., appointment_service)"
-    )
+    parser.add_argument("name", help="Name of the service (e.g., appointment_service)")
 
     args = parser.parse_args()
 
     if not SHARED_LIB_PATH.exists():
-        print(
-            "❌ Error: 'shared' directory not found. Are you in the project root?"
-        )
+        print("❌ Error: 'shared' directory not found. Are you in the project root?")
         sys.exit(1)
 
     generate_service(args.name)

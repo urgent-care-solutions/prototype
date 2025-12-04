@@ -11,7 +11,9 @@ class Settings(BaseSettings):
     SERVICE_DESCRIPTION: str = "Handles RBAC access to clinic resources"
     VERSION: str
     NATS_CONNECTION_STR: str = "nats://localhost:4222"
-    DATABASE_URL: str = "sqlite+aiosqlite:///./database/rbac.db"
+    DATABASE_URL: str = (
+        "postgresql+asyncpg://postgres:postgres@localhost:5432/phi_rbac"
+    )
 
     LOGGER: str = "rich"
 

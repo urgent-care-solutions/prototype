@@ -19,9 +19,7 @@ Base = declarative_base()
 class Encounter(Base):
     __tablename__ = "encounters"
 
-    id = Column(
-        String(36), primary_key=True, default=lambda: str(uuid.uuid4())
-    )
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     appointment_id = Column(String(36), nullable=True, unique=True)
     patient_id = Column(String(36), nullable=False)
     provider_id = Column(String(36), nullable=False)
@@ -44,20 +42,14 @@ class Encounter(Base):
     )
 
     vitals = relationship("Vitals", back_populates="encounter")
-    prescriptions = relationship(
-        "Prescription", back_populates="encounter"
-    )
+    prescriptions = relationship("Prescription", back_populates="encounter")
 
 
 class Vitals(Base):
     __tablename__ = "vitals"
 
-    id = Column(
-        String(36), primary_key=True, default=lambda: str(uuid.uuid4())
-    )
-    encounter_id = Column(
-        String(36), ForeignKey("encounters.id"), nullable=True
-    )
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    encounter_id = Column(String(36), ForeignKey("encounters.id"), nullable=True)
     patient_id = Column(String(36), nullable=False)
 
     height_cm = Column(Float, nullable=True)
@@ -77,12 +69,8 @@ class Vitals(Base):
 class Prescription(Base):
     __tablename__ = "prescriptions"
 
-    id = Column(
-        String(36), primary_key=True, default=lambda: str(uuid.uuid4())
-    )
-    encounter_id = Column(
-        String(36), ForeignKey("encounters.id"), nullable=True
-    )
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    encounter_id = Column(String(36), ForeignKey("encounters.id"), nullable=True)
     patient_id = Column(String(36), nullable=False)
     provider_id = Column(String(36), nullable=False)
 
@@ -91,12 +79,8 @@ class Prescription(Base):
     frequency = Column(String(100), nullable=False)
     duration_days = Column(Integer, nullable=False)
     instructions = Column(Text, nullable=True)
-    status = Column(
-        String(20), default="active"
-    )  # active, completed, cancelled
+    status = Column(String(20), default="active")  # active, completed, cancelled
 
     created_at = Column(DateTime, default=lambda: datetime.now(tz=UTC))
 
-    encounter = relationship(
-        "Encounter", back_populates="prescriptions"
-    )
+    encounter = relationship("Encounter", back_populates="prescriptions")

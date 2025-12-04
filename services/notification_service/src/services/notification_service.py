@@ -18,14 +18,11 @@ class NotificationService:
         resource_type: str = None,
         resource_id: UUID = None,
     ) -> NotificationHistory:
-
         # Simulate Network Delay
         await asyncio.sleep(0.1)
 
         # MOCK SENDING
-        _log.info(
-            f"📧 [MOCK EMAIL] To: {to_email} | Subject: {subject}"
-        )
+        _log.info(f"📧 [MOCK EMAIL] To: {to_email} | Subject: {subject}")
         _log.info(f"   Body: {content}")
 
         async with AsyncSessionLocal() as session:
@@ -36,9 +33,7 @@ class NotificationService:
                 content=content,
                 status="sent",
                 related_resource_type=resource_type,
-                related_resource_id=str(resource_id)
-                if resource_id
-                else None,
+                related_resource_id=str(resource_id) if resource_id else None,
             )
             session.add(record)
             await session.commit()
@@ -52,7 +47,6 @@ class NotificationService:
         resource_type: str = None,
         resource_id: UUID = None,
     ) -> NotificationHistory:
-
         # Simulate Network Delay
         await asyncio.sleep(0.1)
 
@@ -67,9 +61,7 @@ class NotificationService:
                 content=content,
                 status="sent",
                 related_resource_type=resource_type,
-                related_resource_id=str(resource_id)
-                if resource_id
-                else None,
+                related_resource_id=str(resource_id) if resource_id else None,
             )
             session.add(record)
             await session.commit()

@@ -58,9 +58,7 @@ fake = Faker()
 broker = NatsBroker(settings.NATS_CONNECTION_STR)
 
 
-async def wait_for_service(
-    subject: str, retries: int = 10, delay: int = 3
-):
+async def wait_for_service(subject: str, retries: int = 10, delay: int = 3):
     """Simple ping to check if a subject has subscribers."""
     logger.info(f"⏳ Waiting for subscribers on {subject}...")
     # FastStream/NatsBroker doesn't expose a clean 'is_subscribed' check easily without internals,
@@ -72,9 +70,7 @@ async def wait_for_service(
 
 async def seed_data():
     if not settings.SEED_DATA:
-        logger.warning(
-            "🛑 Seeding disabled (SEED_DATA!=true). Exiting."
-        )
+        logger.warning("🛑 Seeding disabled (SEED_DATA!=true). Exiting.")
         return
 
     logger.info("🌱 Starting Data Seeding via NATS...")
@@ -89,9 +85,7 @@ async def seed_data():
     # 2. Fetch Roles (Required for Users)
     roles = await fetch_roles()
     if not roles:
-        logger.error(
-            "❌ No roles found. Is RBAC service running? Aborting."
-        )
+        logger.error("❌ No roles found. Is RBAC service running? Aborting.")
         return
 
     role_map = {r.name: r.id for r in roles}
@@ -117,9 +111,7 @@ async def seed_clinic() -> uuid.UUID:
         email="contact@hospital.com",
         working_hours={"mon-fri": "08:00-18:00"},
     )
-    res: ClinicCreated = await broker.publish(
-        req, "clinic.create", rpc=True
-    )
+    res: ClinicCreated = await broker.publish(req, "clinic.create", rpc=True)
     if res.success:
         logger.info(f"🏥 Clinic Created: {res.id}")
         return res.id
@@ -134,9 +126,7 @@ async def seed_location(clinic_id: uuid.UUID) -> uuid.UUID:
         type="Hospital",
         address={"city": "New York", "street": "123 Main St"},
     )
-    res: LocationCreated = await broker.publish(
-        req, "location.create", rpc=True
-    )
+    res: LocationCreated = await broker.publish(req, "location.create", rpc=True)
     if res.success:
         logger.info(f"📍 Location Created: {res.id}")
         return res.id
@@ -145,9 +135,7 @@ async def seed_location(clinic_id: uuid.UUID) -> uuid.UUID:
 
 async def fetch_roles():
     try:
-        res: RoleListed = await broker.publish(
-            RoleList(), "role.list", rpc=True
-        )
+        res: RoleListed = await broker.publish(RoleList(), "role.list", rpc=True)
         if res.success:
             return res.roles
     except Exception as e:
@@ -173,9 +161,7 @@ async def seed_providers(role_id: uuid.UUID) -> list[uuid.UUID]:
             last_name=fake.last_name(),
         )
         try:
-            u_res: UserCreated = await broker.publish(
-                u_req, "user.create", rpc=True
-            )
+            u_res: UserCreated = await broker.publish(u_req, "user.create", rpc=True)
             if u_res.success:
                 provider_ids.append(u_res.id)
                 # Create Schedule
@@ -186,9 +172,7 @@ async def seed_providers(role_id: uuid.UUID) -> list[uuid.UUID]:
                         start_time=time(9, 0),
                         end_time=time(17, 0),
                     )
-                    await broker.publish(
-                        s_req, "schedule.create"
-                    )  # Fire and forget
+                    await broker.publish(s_req, "schedule.create")  # Fire and forget
         except Exception as e:
             logger.error(f"Failed to create provider: {e}")
 
@@ -216,9 +200,7 @@ async def seed_patients(role_id: uuid.UUID) -> list[uuid.UUID]:
         )
 
         try:
-            u_res: UserCreated = await broker.publish(
-                u_req, "user.create", rpc=True
-            )
+            u_res: UserCreated = await broker.publish(u_req, "user.create", rpc=True)
 
             if u_res.success:
                 # 2. Create Patient Profile linked to User
@@ -267,9 +249,7 @@ async def seed_appointments(
             if is_past
             else fake.date_between(start_date="+1d", end_date="+30d")
         )
-        start_time = datetime.combine(
-            start_date, time(random.randint(9, 16), 0)
-        )
+        start_time = datetime.combine(start_date, time(random.randint(9, 16), 0))
 
         # Create Appointment
         req = AppointmentCreate(

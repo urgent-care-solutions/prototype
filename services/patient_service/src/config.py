@@ -8,12 +8,12 @@ THIS_DIR = Path(__file__).parent
 
 class Settings(BaseSettings):
     SERVICE_NAME: str
-    SERVICE_DESCRIPTION: str = (
-        "Handles Patient Records and Insurance Data"
-    )
+    SERVICE_DESCRIPTION: str = "Handles Patient Records and Insurance Data"
     VERSION: str
     NATS_CONNECTION_STR: str = "nats://localhost:4222"
-    DATABASE_URL: str = "sqlite+aiosqlite:///./database/patients.db"
+    DATABASE_URL: str = (
+        "postgresql+asyncpg://postgres:postgres@localhost:5432/phi_patient"
+    )
     LOGGER: str = "rich"
 
     model_config = SettingsConfigDict(

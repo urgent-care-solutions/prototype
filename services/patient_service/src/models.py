@@ -10,14 +10,10 @@ Base = declarative_base()
 class Patient(Base):
     __tablename__ = "patients"
 
-    id = Column(
-        String(36), primary_key=True, default=lambda: str(uuid.uuid4())
-    )
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     first_name = Column(String(100), nullable=False)
     last_name = Column(String(100), nullable=False)
-    mrn = Column(
-        String(50), unique=True, nullable=False
-    )  # Medical Record Number
+    mrn = Column(String(50), unique=True, nullable=False)  # Medical Record Number
     email = Column(String(255), nullable=True)
 
     # Stores provider_name and policy_number
@@ -31,6 +27,4 @@ class Patient(Base):
         onupdate=lambda: datetime.now(tz=UTC),
     )
 
-    user_id = Column(
-        String(36), nullable=True, unique=True
-    )  # Associated user ID
+    user_id = Column(String(36), nullable=True, unique=True)  # Associated user ID
