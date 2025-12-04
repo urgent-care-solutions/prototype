@@ -26,9 +26,10 @@ services:
       dockerfile: ./services/rbac_service/Dockerfile
     restart: always
     container_name: rbac-service
+    environment:
+      PHI__RBAC__DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@pgsql:5432/phi_rbac
     command: >
-      sh -c "touch /app/services/rbac_service/database/rbac.db &&
-             uv run alembic upgrade head &&
+      sh -c "uv run alembic upgrade head &&
              uv run faststream run src.main:app --host 0.0.0.0 --port 8080"
     healthcheck:
       test: [ "CMD", "wget", "--spider", "-q", "http://localhost:8080/healthz" ]
@@ -40,8 +41,7 @@ services:
       - phi
     depends_on:
       - nats
-    volumes:
-      - rbac_data:/app/services/rbac_service/database
+      - pgsql
 
   auth:
     build:
@@ -69,9 +69,10 @@ services:
       dockerfile: ./services/audit_service/Dockerfile
     restart: always
     container_name: audit-service
+    environment:
+      PHI__AUDIT__DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@pgsql:5432/phi_audit
     command: >
-      sh -c "touch /app/services/audit_service/database/audit.db &&
-             uv run alembic upgrade head &&
+      sh -c "uv run alembic upgrade head &&
              uv run faststream run src.main:app --host 0.0.0.0 --port 8020"
     healthcheck:
       test: [ "CMD", "wget", "--spider", "-q", "http://localhost:8020/healthz" ]
@@ -85,8 +86,7 @@ services:
       - phi
     depends_on:
       - nats
-    volumes:
-      - audit_data:/app/services/audit_service/database
+      - pgsql
 
   patients:
     build:
@@ -94,9 +94,10 @@ services:
       dockerfile: ./services/patient_service/Dockerfile
     restart: always
     container_name: patients-service
+    environment:
+      PHI__PATIENT__DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@pgsql:5432/phi_patient
     command: >
-      sh -c "touch /app/services/patient_service/database/patients.db &&
-             uv run alembic upgrade head &&
+      sh -c "uv run alembic upgrade head &&
              uv run faststream run src.main:app --host 0.0.0.0 --port 8100"
     healthcheck:
       test: [ "CMD", "wget", "--spider", "-q", "http://localhost:8100/healthz" ]
@@ -112,8 +113,7 @@ services:
       - rbac
       - auth
       - nats
-    volumes:
-      - patients_data:/app/services/patient_service/database
+      - pgsql
 
   appointments:
     build:
@@ -121,9 +121,10 @@ services:
       dockerfile: ./services/appointments_service/Dockerfile
     restart: always
     container_name: appointments-service
+    environment:
+      PHI__APPOINTMENT__DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@pgsql:5432/phi_appointments
     command: >
-      sh -c "touch /app/services/appointments_service/database/appointments.db &&
-             uv run alembic upgrade head &&
+      sh -c "uv run alembic upgrade head &&
              uv run faststream run src.main:app --host 0.0.0.0 --port 8010"
     healthcheck:
       test: [ "CMD", "wget", "--spider", "-q", "http://localhost:8010/healthz" ]
@@ -139,8 +140,7 @@ services:
       - rbac
       - auth
       - nats
-    volumes:
-      - appointments_data:/app/services/appointments_service/database
+      - pgsql
 
   ehr:
     build:
@@ -148,9 +148,10 @@ services:
       dockerfile: ./services/ehr_service/Dockerfile
     restart: always
     container_name: ehr-service
+    environment:
+      PHI__EHR__DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@pgsql:5432/phi_ehr
     command: >
-      sh -c "touch /app/services/ehr_service/database/ehr.db &&
-             uv run alembic upgrade head &&
+      sh -c "uv run alembic upgrade head &&
              uv run faststream run src.main:app --host 0.0.0.0 --port 8200"
     healthcheck:
       test: [ "CMD", "wget", "--spider", "-q", "http://localhost:8200/healthz" ]
@@ -166,8 +167,7 @@ services:
       - rbac
       - auth
       - nats
-    volumes:
-      - ehr_data:/app/services/ehr_service/database
+      - pgsql
 
   billing:
     build:
@@ -175,9 +175,10 @@ services:
       dockerfile: ./services/integration_service/Dockerfile
     restart: always
     container_name: integration-service
+    environment:
+      PHI__BILLING__DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@pgsql:5432/phi_billing
     command: >
-      sh -c "touch /app/services/integration_service/database/integration.db &&
-             uv run alembic upgrade head &&
+      sh -c "uv run alembic upgrade head &&
              uv run faststream run src.main:app --host 0.0.0.0 --port 8300"
     healthcheck:
       test: [ "CMD", "wget", "--spider", "-q", "http://localhost:8300/healthz" ]
@@ -193,8 +194,7 @@ services:
       - rbac
       - auth
       - nats
-    volumes:
-      - billing_data:/app/services/integration_service/database
+      - pgsql
 
   notification:
     build:
@@ -202,9 +202,10 @@ services:
       dockerfile: ./services/notification_service/Dockerfile
     restart: always
     container_name: notification-service
+    environment:
+      PHI__NOTIFICATION__DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@pgsql:5432/phi_notification
     command: >
-      sh -c "touch /app/services/notification_service/database/notification.db &&
-             uv run alembic upgrade head &&
+      sh -c "uv run alembic upgrade head &&
              uv run faststream run src.main:app --host 0.0.0.0 --port 8400"
     healthcheck:
       test: [ "CMD", "wget", "--spider", "-q", "http://localhost:8400/healthz" ]
@@ -220,8 +221,7 @@ services:
       - rbac
       - auth
       - nats
-    volumes:
-      - notification_data:/app/services/notification_service/database
+      - pgsql
 
   reporting:
     build:
@@ -229,9 +229,10 @@ services:
       dockerfile: ./services/reporting_service/Dockerfile
     restart: always
     container_name: reporting-service
+    environment:
+      PHI__REPORTING__DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@pgsql:5432/phi_reporting
     command: >
-      sh -c "touch /app/services/reporting_service/database/reporting.db &&
-             uv run alembic upgrade head &&
+      sh -c "uv run alembic upgrade head &&
              uv run faststream run src.main:app --host 0.0.0.0 --port 8500"
     healthcheck:
       test: [ "CMD", "wget", "--spider", "-q", "http://localhost:8500/healthz" ]
@@ -247,8 +248,7 @@ services:
       - rbac
       - auth
       - nats
-    volumes:
-      - reporting_data:/app/services/reporting_service/database
+      - pgsql
 
   seeder:
     build:
@@ -313,16 +313,31 @@ services:
     networks:
       - phi
 
+  pgsql:
+    image: postgres:18.1-alpine3.22
+    container_name: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ./init_db.sql:/docker-entrypoint-initdb.d/init_db.sql
+    ports:
+      - 5432:5432
+    networks:
+      - phi
+
 volumes:
   nats_data:
-  ehr_data:
-  appointments_data:
-  patients_data:
-  audit_data:
-  billing_data:
-  notification_data:
-  reporting_data:
-  rbac_data:
+  pg_data:
 
 
 networks:
