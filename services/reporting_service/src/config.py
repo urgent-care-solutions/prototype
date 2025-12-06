@@ -11,7 +11,9 @@ class Settings(BaseSettings):
     SERVICE_DESCRIPTION: str = "Microservice for reporting"
     VERSION: str
     NATS_CONNECTION_STR: str = "nats://localhost:4222"
-    DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/phi_reporting"
+    DATABASE_URL: str = (
+        "postgresql+asyncpg://postgres:postgres@localhost:5432/phi_reporting"
+    )
     LOGGER: str = "rich"
 
     model_config = SettingsConfigDict(

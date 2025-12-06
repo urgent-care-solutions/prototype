@@ -11,7 +11,9 @@ class Settings(BaseSettings):
     SERVICE_DESCRIPTION: str = "Microservice for notification"
     VERSION: str
     NATS_CONNECTION_STR: str = "nats://localhost:4222"
-    DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/phi_notification"
+    DATABASE_URL: str = (
+        "postgresql+asyncpg://postgres:postgres@localhost:5432/phi_notification"
+    )
     LOGGER: str = "rich"
 
     model_config = SettingsConfigDict(

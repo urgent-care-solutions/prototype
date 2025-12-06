@@ -11,7 +11,9 @@ class Settings(BaseSettings):
     SERVICE_DESCRIPTION: str = "Handles System Audit Logs"
     VERSION: str
     NATS_CONNECTION_STR: str = "nats://localhost:4222"
-    DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/phi_audit"
+    DATABASE_URL: str = (
+        "postgresql+asyncpg://postgres:postgres@localhost:5432/phi_audit"
+    )
 
     # 6 years in days (approx)
     RETENTION_DAYS: int = 365 * 6
