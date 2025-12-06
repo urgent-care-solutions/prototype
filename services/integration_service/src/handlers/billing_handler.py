@@ -16,7 +16,6 @@ _log = logging.getLogger(settings.LOGGER)
 
 
 def register_handlers(broker: NatsBroker):
-
     @broker.subscriber("billing.charge")
     @broker.publisher("billing.charged")
     @broker.publisher("audit.log.billing")
@@ -87,9 +86,7 @@ def register_handlers(broker: NatsBroker):
     @broker.publisher("billing.refunded")
     @broker.publisher("audit.log.billing")
     async def handle_refund(msg: RefundCreate) -> RefundCreated:
-        _log.info(
-            f"Processing refund for transaction {msg.transaction_id}"
-        )
+        _log.info(f"Processing refund for transaction {msg.transaction_id}")
 
         try:
             tx = await BillingService.process_refund(msg)

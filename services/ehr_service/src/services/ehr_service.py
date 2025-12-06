@@ -63,9 +63,7 @@ class EHRService:
     async def add_vitals(data: VitalsCreate) -> Vitals:
         async with AsyncSessionLocal() as session:
             vitals = Vitals(
-                encounter_id=str(data.encounter_id)
-                if data.encounter_id
-                else None,
+                encounter_id=str(data.encounter_id) if data.encounter_id else None,
                 patient_id=str(data.patient_id),
                 height_cm=data.height_cm,
                 weight_kg=data.weight_kg,
@@ -87,9 +85,7 @@ class EHRService:
     ) -> Prescription:
         async with AsyncSessionLocal() as session:
             rx = Prescription(
-                encounter_id=str(data.encounter_id)
-                if data.encounter_id
-                else None,
+                encounter_id=str(data.encounter_id) if data.encounter_id else None,
                 patient_id=str(data.patient_id),
                 provider_id=str(data.provider_id),
                 medication_name=data.medication_name,
@@ -142,9 +138,7 @@ class EHRService:
             ),
             DiagnosisCode(code="R51", description="Headache"),
             DiagnosisCode(code="R05", description="Cough"),
-            DiagnosisCode(
-                code="R50.9", description="Fever, unspecified"
-            ),
+            DiagnosisCode(code="R50.9", description="Fever, unspecified"),
             DiagnosisCode(code="M54.5", description="Low back pain"),
             DiagnosisCode(
                 code="Z00.00",

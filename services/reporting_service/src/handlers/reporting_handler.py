@@ -23,7 +23,6 @@ _log = logging.getLogger(settings.LOGGER)
 
 
 def register_handlers(broker: NatsBroker):
-
     # --- Ingestion Subscriptions ---
 
     @broker.subscriber("appointment.created")
@@ -61,12 +60,8 @@ def register_handlers(broker: NatsBroker):
     async def report_revenue(
         msg: DateRangeRequest,
     ) -> RevenueReportResponse:
-        _log.info(
-            f"Generating revenue report from {msg.start_date} to {msg.end_date}"
-        )
-        stats = await ReportingService.get_revenue_stats(
-            msg.start_date, msg.end_date
-        )
+        _log.info(f"Generating revenue report from {msg.start_date} to {msg.end_date}")
+        stats = await ReportingService.get_revenue_stats(msg.start_date, msg.end_date)
 
         await broker.publish(
             AuditLog(
@@ -117,9 +112,7 @@ def register_handlers(broker: NatsBroker):
         msg: DateRangeRequest,
     ) -> PatientReportResponse:
         _log.info("Generating patient report")
-        stats = await ReportingService.get_patient_stats(
-            msg.start_date, msg.end_date
-        )
+        stats = await ReportingService.get_patient_stats(msg.start_date, msg.end_date)
 
         await broker.publish(
             AuditLog(

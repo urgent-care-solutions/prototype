@@ -8,12 +8,12 @@ THIS_DIR = Path(__file__).parent
 
 class Settings(BaseSettings):
     SERVICE_NAME: str
-    SERVICE_DESCRIPTION: str = (
-        "Handles Appointments and Provider Schedules"
-    )
+    SERVICE_DESCRIPTION: str = "Handles Appointments and Provider Schedules"
     VERSION: str
     NATS_CONNECTION_STR: str = "nats://localhost:4222"
-    DATABASE_URL: str = "sqlite+aiosqlite:///./database/appointments.db"
+    DATABASE_URL: str = (
+        "postgresql+asyncpg://postgres:postgres@localhost:5432/phi_appointments"
+    )
     LOGGER: str = "rich"
 
     # Durations in minutes

@@ -24,7 +24,6 @@ _log = logging.getLogger(settings.LOGGER)
 
 
 def register_handlers(broker: NatsBroker):
-
     @broker.subscriber("ehr.encounter.create")
     @broker.publisher("ehr.encounter.created")
     @broker.publisher("audit.log.encounter")
@@ -51,9 +50,7 @@ def register_handlers(broker: NatsBroker):
                 subject="audit.log.encounter",
             )
 
-            return EncounterCreated.model_validate(
-                encounter, from_attributes=True
-            )
+            return EncounterCreated.model_validate(encounter, from_attributes=True)
         except Exception as e:
             _log.error(f"Error creating encounter: {e}")
             return EncounterCreated(
@@ -79,9 +76,7 @@ def register_handlers(broker: NatsBroker):
             )
 
         # Manually validate because of relationships
-        response = EncounterReaded.model_validate(
-            encounter, from_attributes=True
-        )
+        response = EncounterReaded.model_validate(encounter, from_attributes=True)
         response.vitals = [
             VitalsCreated.model_validate(v, from_attributes=True)
             for v in encounter.vitals
@@ -115,14 +110,10 @@ def register_handlers(broker: NatsBroker):
                 ),
                 subject="audit.log.vitals",
             )
-            return VitalsCreated.model_validate(
-                vitals, from_attributes=True
-            )
+            return VitalsCreated.model_validate(vitals, from_attributes=True)
         except Exception as e:
             _log.error(f"Error adding vitals: {e}")
-            return VitalsCreated(
-                success=False, patient_id=msg.patient_id
-            )
+            return VitalsCreated(success=False, patient_id=msg.patient_id)
 
     @broker.subscriber("ehr.prescription.add")
     @broker.publisher("ehr.prescription.added")
@@ -145,9 +136,7 @@ def register_handlers(broker: NatsBroker):
                 ),
                 subject="audit.log.prescription",
             )
-            return PrescriptionCreated.model_validate(
-                rx, from_attributes=True
-            )
+            return PrescriptionCreated.model_validate(rx, from_attributes=True)
         except Exception as e:
             _log.error(f"Error adding prescription: {e}")
             return PrescriptionCreated(

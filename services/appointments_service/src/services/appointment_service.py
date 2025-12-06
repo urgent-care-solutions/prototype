@@ -34,8 +34,7 @@ class AppointmentService:
 
             sched_stmt = select(ProviderSchedule).where(
                 and_(
-                    ProviderSchedule.provider_id
-                    == str(data.provider_id),
+                    ProviderSchedule.provider_id == str(data.provider_id),
                     ProviderSchedule.day_of_week == dow,
                     ProviderSchedule.is_active == True,  # noqa: E712
                     ProviderSchedule.start_time <= req_time,
@@ -82,9 +81,7 @@ class AppointmentService:
         data: AppointmentCancel,
     ) -> Appointment:
         async with AsyncSessionLocal() as session:
-            stmt = select(Appointment).where(
-                Appointment.id == str(data.appointment_id)
-            )
+            stmt = select(Appointment).where(Appointment.id == str(data.appointment_id))
             res = await session.execute(stmt)
             apt = res.scalars().first()
 
@@ -105,8 +102,6 @@ class AppointmentService:
     @staticmethod
     async def get_appointment(apt_id: UUID) -> Appointment | None:
         async with AsyncSessionLocal() as session:
-            stmt = select(Appointment).where(
-                Appointment.id == str(apt_id)
-            )
+            stmt = select(Appointment).where(Appointment.id == str(apt_id))
             res = await session.execute(stmt)
             return res.scalars().first()

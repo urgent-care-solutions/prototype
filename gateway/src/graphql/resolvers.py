@@ -37,9 +37,7 @@ from src.graphql.types import (
 # --- AUTH ---
 async def login(input: LoginInput) -> LoginResponse:
     req = AuthLoginRequest(email=input.email, password=input.password)
-    res = await nats_client.request(
-        "auth.login", req, AuthLoginResponse
-    )
+    res = await nats_client.request("auth.login", req, AuthLoginResponse)
 
     return LoginResponse(
         success=res.success,
@@ -69,9 +67,7 @@ async def get_patient(id: str, info: Info) -> Optional[PatientType]:
 
 
 @require_permission("patients", "write")
-async def create_patient(
-    input: CreatePatientInput, info: Info
-) -> GenericResponse:
+async def create_patient(input: CreatePatientInput, info: Info) -> GenericResponse:
     user_id = info.context["user"].user_id
 
     req = PatientCreate(
@@ -82,9 +78,7 @@ async def create_patient(
         email=input.email,
     )
 
-    res = await nats_client.request(
-        "patient.create", req, PatientCreated
-    )
+    res = await nats_client.request("patient.create", req, PatientCreated)
 
     return GenericResponse(
         success=res.success,
@@ -95,13 +89,9 @@ async def create_patient(
 
 # --- APPOINTMENTS ---
 @require_permission("appointments", "read")
-async def get_appointment(
-    id: str, info: Info
-) -> Optional[AppointmentType]:
+async def get_appointment(id: str, info: Info) -> Optional[AppointmentType]:
     req = AppointmentRead(appointment_id=id)
-    res = await nats_client.request(
-        "appointment.read", req, AppointmentReaded
-    )
+    res = await nats_client.request("appointment.read", req, AppointmentReaded)
 
     if not res.success:
         return None
@@ -133,9 +123,7 @@ async def create_appointment(
         reason=input.reason,
     )
 
-    res = await nats_client.request(
-        "appointment.create", req, AppointmentCreated
-    )
+    res = await nats_client.request("appointment.create", req, AppointmentCreated)
 
     return GenericResponse(
         success=res.success,
@@ -149,13 +137,9 @@ async def check_availability(
     provider_id: str, date: date, info: Info
 ) -> List[AvailabilitySlotType]:
     req = AvailabilityRequest(provider_id=provider_id, date=date)
-    res = await nats_client.request(
-        "availability.get", req, AvailabilityResponse
-    )
+    res = await nats_client.request("availability.get", req, AvailabilityResponse)
 
     return [
-        AvailabilitySlotType(
-            start=s.start, end=s.end, available=s.available
-        )
+        AvailabilitySlotType(start=s.start, end=s.end, available=s.available)
         for s in res.slots
     ]

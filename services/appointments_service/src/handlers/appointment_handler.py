@@ -25,7 +25,6 @@ _log = logging.getLogger(settings.LOGGER)
 
 
 def register_handlers(broker: NatsBroker):
-
     # --- Appointments ---
 
     @broker.subscriber("appointment.create")
@@ -34,9 +33,7 @@ def register_handlers(broker: NatsBroker):
     async def handle_create_appointment(
         msg: AppointmentCreate,
     ) -> AppointmentCreated:
-        _log.info(
-            f"Request to create appointment for patient {msg.patient_id}"
-        )
+        _log.info(f"Request to create appointment for patient {msg.patient_id}")
         try:
             apt = await AppointmentService.create_appointment(msg)
 
@@ -56,9 +53,7 @@ def register_handlers(broker: NatsBroker):
                 subject="audit.log.appointment",
             )
 
-            return AppointmentCreated.model_validate(
-                apt, from_attributes=True
-            )
+            return AppointmentCreated.model_validate(apt, from_attributes=True)
         except ValueError as e:
             _log.error(f"Business error creating appointment: {e}")
             return AppointmentCreated(
@@ -108,23 +103,17 @@ def register_handlers(broker: NatsBroker):
                 ),
                 subject="audit.log.appointment",
             )
-            return AppointmentCanceled(
-                appointment_id=msg.appointment_id, success=True
-            )
+            return AppointmentCanceled(appointment_id=msg.appointment_id, success=True)
         except Exception as e:
             _log.error(f"Error canceling appointment: {e}")
-            return AppointmentCanceled(
-                appointment_id=msg.appointment_id, success=False
-            )
+            return AppointmentCanceled(appointment_id=msg.appointment_id, success=False)
 
     @broker.subscriber("appointment.read")
     @broker.publisher("appointment.readed")
     async def handle_read_appointment(
         msg: AppointmentRead,
     ) -> AppointmentReaded:
-        apt = await AppointmentService.get_appointment(
-            msg.appointment_id
-        )
+        apt = await AppointmentService.get_appointment(msg.appointment_id)
         if not apt:
             return AppointmentReaded(
                 success=False,
@@ -135,9 +124,7 @@ def register_handlers(broker: NatsBroker):
                 appointment_type="initial",
                 end_time=datetime.now(),
             )
-        return AppointmentReaded.model_validate(
-            apt, from_attributes=True
-        )
+        return AppointmentReaded.model_validate(apt, from_attributes=True)
 
     # --- Schedules / Availability ---
 
@@ -167,9 +154,7 @@ def register_handlers(broker: NatsBroker):
                 subject="audit.log.schedule",
             )
 
-            return ScheduleCreated.model_validate(
-                sch, from_attributes=True
-            )
+            return ScheduleCreated.model_validate(sch, from_attributes=True)
         except Exception as e:
             _log.error(f"Error creating schedule: {e}")
             return ScheduleCreated(

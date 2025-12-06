@@ -11,7 +11,9 @@ class Settings(BaseSettings):
     SERVICE_DESCRIPTION: str = "Microservice for integration"
     VERSION: str
     NATS_CONNECTION_STR: str = "nats://localhost:4222"
-    DATABASE_URL: str = "sqlite+aiosqlite:///./database/integration.db"
+    DATABASE_URL: str = (
+        "postgresql+asyncpg://postgres:postgres@localhost:5432/phi_billing"
+    )
     LOGGER: str = "rich"
 
     FAILURE_RATE: float = 0.05  # 5% failure rate for testing purposes

@@ -1,8 +1,8 @@
-"""Initial patient schema
+"""Initial postgres migration
 
-Revision ID: bda9fac8626c
+Revision ID: ad632f340f91
 Revises: 
-Create Date: 2025-11-24 11:26:00.679115
+Create Date: 2025-12-06 10:28:20.647510
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = 'bda9fac8626c'
+revision: str = 'ad632f340f91'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -31,7 +31,7 @@ def upgrade() -> None:
     sa.Column('is_active', sa.Boolean(), nullable=True),
     sa.Column('created_at', sa.DateTime(), nullable=True),
     sa.Column('updated_at', sa.DateTime(), nullable=True),
-    sa.Column('user_id', sa.String(length=36), nullable=False),
+    sa.Column('user_id', sa.String(length=36), nullable=True),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('mrn'),
     sa.UniqueConstraint('user_id')

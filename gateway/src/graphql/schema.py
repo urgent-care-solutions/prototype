@@ -21,14 +21,10 @@ from src.graphql.types import (
 
 @strawberry.type
 class Query:
-    patient: Optional[PatientType] = strawberry.field(
-        resolver=get_patient
-    )
-    appointment: Optional[AppointmentType] = strawberry.field(
-        resolver=get_appointment
-    )
-    provider_availability: List[AvailabilitySlotType] = (
-        strawberry.field(resolver=check_availability)
+    patient: Optional[PatientType] = strawberry.field(resolver=get_patient)
+    appointment: Optional[AppointmentType] = strawberry.field(resolver=get_appointment)
+    provider_availability: List[AvailabilitySlotType] = strawberry.field(
+        resolver=check_availability
     )
 
     @strawberry.field
@@ -39,12 +35,8 @@ class Query:
 @strawberry.type
 class Mutation:
     login: LoginResponse = strawberry.field(resolver=login)
-    create_patient: GenericResponse = strawberry.field(
-        resolver=create_patient
-    )
-    create_appointment: GenericResponse = strawberry.field(
-        resolver=create_appointment
-    )
+    create_patient: GenericResponse = strawberry.field(resolver=create_patient)
+    create_appointment: GenericResponse = strawberry.field(resolver=create_appointment)
 
 
 schema = strawberry.Schema(query=Query, mutation=Mutation)

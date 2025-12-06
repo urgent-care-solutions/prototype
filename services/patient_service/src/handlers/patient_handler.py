@@ -21,7 +21,6 @@ _log = logging.getLogger(settings.LOGGER)
 
 
 def register_handlers(broker: NatsBroker):
-
     @broker.subscriber("patient.create")
     @broker.publisher("patient.created")
     @broker.publisher("audit.log.patient")
@@ -45,9 +44,7 @@ def register_handlers(broker: NatsBroker):
                 subject="audit.log.patient",
             )
 
-            return PatientCreated.model_validate(
-                patient, from_attributes=True
-            )
+            return PatientCreated.model_validate(patient, from_attributes=True)
         except Exception as e:
             _log.error(f"Error creating patient: {e}")
             return PatientCreated(
@@ -64,12 +61,8 @@ def register_handlers(broker: NatsBroker):
         _log.debug(f"Reading patient: {msg.patient_id}")
         patient = await PatientService.get_patient(msg.patient_id)
         if not patient:
-            return PatientReaded(
-                success=False, first_name="", last_name="", mrn=""
-            )
-        return PatientReaded.model_validate(
-            patient, from_attributes=True
-        )
+            return PatientReaded(success=False, first_name="", last_name="", mrn="")
+        return PatientReaded.model_validate(patient, from_attributes=True)
 
     @broker.subscriber("patient.update")
     @broker.publisher("patient.updated")
@@ -89,17 +82,13 @@ def register_handlers(broker: NatsBroker):
                     service_name=settings.SERVICE_NAME,
                     user_id=msg.user_id,
                     metadata={
-                        "updated_fields": msg.model_dump(
-                            exclude_unset=True
-                        ).keys()
+                        "updated_fields": msg.model_dump(exclude_unset=True).keys()
                     },
                 ),
                 subject="audit.log.patient",
             )
 
-            return PatientUpdated.model_validate(
-                patient, from_attributes=True
-            )
+            return PatientUpdated.model_validate(patient, from_attributes=True)
         except Exception as e:
             _log.error(f"Error updating patient: {e}")
             return PatientUpdated(
@@ -118,9 +107,7 @@ def register_handlers(broker: NatsBroker):
     ) -> PatientDeleted:
         _log.info(f"Deleting patient: {msg.patient_id}")
         try:
-            patient = await PatientService.delete_patient(
-                msg.patient_id
-            )
+            patient = await PatientService.delete_patient(msg.patient_id)
 
             await broker.publish(
                 AuditLog(
@@ -136,6 +123,4 @@ def register_handlers(broker: NatsBroker):
             return PatientDeleted(patient_id=patient.id, success=True)
         except Exception as e:
             _log.error(f"Error deleting patient: {e}")
-            return PatientDeleted(
-                patient_id=msg.patient_id, success=False
-            )
+            return PatientDeleted(patient_id=msg.patient_id, success=False)

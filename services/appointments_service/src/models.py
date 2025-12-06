@@ -18,9 +18,7 @@ Base = declarative_base()
 class ProviderSchedule(Base):
     __tablename__ = "provider_schedules"
 
-    id = Column(
-        String(36), primary_key=True, default=lambda: str(uuid.uuid4())
-    )
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     provider_id = Column(String(36), nullable=False)
     # 0 = Monday, 6 = Sunday
     day_of_week = Column(Integer, nullable=False)
@@ -39,9 +37,7 @@ class ProviderSchedule(Base):
 class Appointment(Base):
     __tablename__ = "appointments"
 
-    id = Column(
-        String(36), primary_key=True, default=lambda: str(uuid.uuid4())
-    )
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     patient_id = Column(String(36), nullable=False)
     provider_id = Column(String(36), nullable=False)
 

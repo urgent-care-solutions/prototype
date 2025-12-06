@@ -18,7 +18,6 @@ _log = logging.getLogger(settings.LOGGER)
 
 
 def register_handlers(broker: NatsBroker):
-
     @broker.subscriber("appointment.created")
     @broker.publisher("audit.log.notification")
     async def handle_appointment_created(msg: AppointmentCreated):

@@ -31,9 +31,7 @@ class PatientService:
         # Check for MRN uniqueness
         existing = await PatientService.get_patient_by_mrn(data.mrn)
         if existing:
-            raise ValueError(
-                f"Patient with MRN {data.mrn} already exists."
-            )
+            raise ValueError(f"Patient with MRN {data.mrn} already exists.")
 
         async with AsyncSessionLocal() as session:
             db_patient = Patient(
@@ -41,9 +39,7 @@ class PatientService:
                 last_name=data.last_name,
                 mrn=data.mrn,
                 email=data.email,
-                insurance=data.insurance.model_dump()
-                if data.insurance
-                else None,
+                insurance=data.insurance.model_dump() if data.insurance else None,
                 is_active=data.is_active,
             )
             session.add(db_patient)
@@ -55,9 +51,7 @@ class PatientService:
     @staticmethod
     async def update_patient(data: PatientUpdate) -> Patient:
         async with AsyncSessionLocal() as session:
-            query = select(Patient).where(
-                Patient.id == str(data.patient_id)
-            )
+            query = select(Patient).where(Patient.id == str(data.patient_id))
             result = await session.execute(query)
             db_patient = result.scalars().first()
 
